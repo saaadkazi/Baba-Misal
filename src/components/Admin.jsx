@@ -484,7 +484,7 @@ export default function Admin({
 
   // MAIN ADMIN INTERFACE
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#0A0A0A', padding: '90px 0 60px 0' }}>
+    <div className="admin-parent" style={{ display: 'flex', minHeight: '100vh', background: '#0A0A0A', padding: '90px 0 60px 0' }}>
       
       {/* SIDEBAR CONSOLE NAVIGATION */}
       <div style={{
@@ -502,7 +502,7 @@ export default function Admin({
       }} className="admin-sidebar">
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div style={{ padding: '0 10px 20px 10px', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '15px' }}>
+          <div className="admin-sidebar-header" style={{ padding: '0 10px 20px 10px', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '15px' }}>
             <h3 style={{ fontSize: '1.2rem', fontFamily: 'var(--font-heading)', color: 'var(--primary)' }}>Console Workspace</h3>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Role: Active Super Administrator</span>
           </div>

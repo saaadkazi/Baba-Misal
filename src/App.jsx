@@ -514,8 +514,7 @@ export default function App() {
             display: inline !important;
             font-size: 0.8rem !important;
           }
-          .admin-sidebar div h3, 
-          .admin-sidebar div span {
+          .admin-sidebar-header {
             display: none !important;
           }
           .admin-sidebar > div:last-child {
@@ -543,6 +542,11 @@ export default function App() {
           }
           .admin-badge-btn {
             padding: 6px !important;
+          }
+
+          /* Admin parent vertical stacking */
+          .admin-parent {
+            flex-direction: column !important;
           }
 
           /* Admin responsive layout toggles */
