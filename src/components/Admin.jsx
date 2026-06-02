@@ -671,7 +671,7 @@ export default function Admin({
             {/* KPI Metrics Dashboard Cards */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))',
               gap: '24px',
               marginBottom: '40px'
             }}>
@@ -713,7 +713,7 @@ export default function Admin({
             {/* Analytics Graph Widget & Recent Tokens Queue */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))',
               gap: '30px'
             }}>
               
@@ -776,7 +776,9 @@ export default function Admin({
                         padding: '12px 16px',
                         display: 'flex',
                         justifyContent: 'space-between',
-                        alignItems: 'center'
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        gap: '10px'
                       }}>
                         <div>
                           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -956,6 +958,8 @@ export default function Admin({
                 <div className="glass-panel animate-fade-in-up" style={{
                   width: '100%',
                   maxWidth: '500px',
+                  maxHeight: '90vh',
+                  overflowY: 'auto',
                   padding: '30px',
                   border: '1px solid var(--primary)',
                   boxShadow: 'var(--gold-glow-strong)'
@@ -1113,7 +1117,7 @@ export default function Admin({
 
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))',
               gap: '35px',
               alignItems: 'flex-start'
             }}>
@@ -1225,7 +1229,7 @@ export default function Admin({
 
                 <form onSubmit={handleGeneratePOSBill}>
                   {/* Guest Info inputs */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px' }}>
+                  <div className="pos-guest-inputs" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px' }}>
                     <div className="input-group" style={{ marginBottom: 0 }}>
                       <label className="input-label" style={{ fontSize: '0.75rem' }}>Guest Name</label>
                       <input
@@ -1346,7 +1350,7 @@ export default function Admin({
             {/* KPI Metrics Dashboard Cards */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))',
               gap: '24px',
               marginBottom: '40px'
             }}>
@@ -1543,6 +1547,8 @@ export default function Admin({
                 <div className="glass-panel animate-fade-in-up" style={{
                   width: '100%',
                   maxWidth: '650px',
+                  maxHeight: '90vh',
+                  overflowY: 'auto',
                   padding: '30px',
                   border: '1px solid var(--primary)',
                   boxShadow: 'var(--gold-glow-strong)'

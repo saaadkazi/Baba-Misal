@@ -196,7 +196,7 @@ export default function Home({ dishes, reviews, onAddReview, navigate }) {
               अस्सल मिसळ, ताजे साहित्य आणि अविस्मरणीय चव यांचा अनोखा संगम. प्रत्येक घासात परंपरा, गुणवत्ता आणि महाराष्ट्राचा खरा स्वाद.
             </p>
             
-            <div style={{ 
+            <div className="hero-buttons-container" style={{ 
               display: 'flex', 
               flexWrap: 'wrap', 
               gap: '15px', 
@@ -268,7 +268,7 @@ export default function Home({ dishes, reviews, onAddReview, navigate }) {
 
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))',
             gap: '30px'
           }}>
             {featuredDishes.map((dish) => (
@@ -335,7 +335,7 @@ export default function Home({ dishes, reviews, onAddReview, navigate }) {
             justifyContent: 'space-between'
           }}>
             {/* Category Tabs */}
-            <div style={{
+            <div className="category-tabs-container" style={{
               display: 'flex',
               flexWrap: 'wrap',
               gap: '8px',
@@ -394,7 +394,7 @@ export default function Home({ dishes, reviews, onAddReview, navigate }) {
           {filteredDishes.length > 0 ? (
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))',
               gap: '30px'
             }}>
               {filteredDishes.map((dish) => (
@@ -535,7 +535,7 @@ export default function Home({ dishes, reviews, onAddReview, navigate }) {
           {/* Testimonial Feed */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))',
             gap: '30px',
             marginBottom: '60px'
           }}>
@@ -668,7 +668,7 @@ export default function Home({ dishes, reviews, onAddReview, navigate }) {
 
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))',
             gap: '50px'
           }}>
             {/* Contact Details & Info */}
@@ -810,7 +810,7 @@ export default function Home({ dishes, reviews, onAddReview, navigate }) {
 
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))',
             gap: '50px',
             alignItems: 'stretch'
           }} className="visit-grid">
@@ -1131,14 +1131,15 @@ export default function Home({ dishes, reviews, onAddReview, navigate }) {
             style={{
               width: '100%',
               maxWidth: '620px',
+              maxHeight: '90vh',
+              overflowY: 'auto',
               background: 'rgba(22, 22, 22, 0.95)',
               border: '1px solid rgba(212, 175, 55, 0.25)',
               borderRadius: 'var(--radius-lg)',
-              overflow: 'hidden',
-              boxShadow: 'var(--gold-glow-strong), 0 20px 50px rgba(0,0,0,0.9)',
               display: 'flex',
               flexDirection: 'column',
-              position: 'relative'
+              position: 'relative',
+              boxShadow: 'var(--gold-glow-strong), 0 20px 50px rgba(0,0,0,0.9)'
             }}
             onClick={(e) => e.stopPropagation()} // Prevent clicking inside from dismissing
           >

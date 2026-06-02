@@ -182,7 +182,7 @@ export default function App() {
               }}
             />
             <div>
-              <h1 style={{ 
+              <h1 className="header-logo-title" style={{ 
                 fontFamily: 'var(--font-heading)', 
                 fontSize: '1.45rem', 
                 lineHeight: '1', 
@@ -192,7 +192,7 @@ export default function App() {
               }}>
                 BABA MISAL
               </h1>
-              <span style={{ fontSize: '0.65rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+              <span className="header-logo-subtitle" style={{ fontSize: '0.65rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
                 Traditional Gold Standard
               </span>
             </div>
@@ -266,7 +266,7 @@ export default function App() {
             {/* Floating QR Order button */}
             <button 
               onClick={() => navigate('/order')} 
-              className="btn btn-primary"
+              className="btn btn-primary header-order-btn"
               style={{ padding: '8px 18px', fontSize: '0.78rem', display: 'inline-flex' }}
             >
               Order Online <ArrowUpRight size={14} />
@@ -299,7 +299,8 @@ export default function App() {
           flexDirection: 'column',
           padding: '40px 30px',
           gap: '25px',
-          borderTop: '1px solid rgba(212, 175, 55, 0.1)'
+          borderTop: '1px solid rgba(212, 175, 55, 0.1)',
+          overflowY: 'auto'
         }}>
           <button 
             onClick={() => navigate('/')} 
@@ -470,23 +471,72 @@ export default function App() {
           .mobile-toggle-btn {
             display: block !important;
           }
+          .header-order-btn {
+            display: none !important;
+          }
+          .header-logo-subtitle {
+            display: none !important;
+          }
+          .header-logo-title {
+            font-size: 1.2rem !important;
+          }
           .admin-sidebar {
-            width: 70px !important;
-            padding: 20px 8px !important;
+            position: relative !important;
+            top: 0 !important;
+            width: 100% !important;
+            height: auto !important;
+            padding: 15px !important;
+            border-right: none !important;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.15) !important;
+            flex-direction: column !important;
+            gap: 15px !important;
           }
-          .admin-sidebar button span, 
-          .admin-sidebar div h3, 
-          .admin-sidebar div span, 
+          .admin-sidebar > div:first-child {
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            overflow-x: auto !important;
+            width: 100% !important;
+            gap: 8px !important;
+            padding-bottom: 8px !important;
+            -webkit-overflow-scrolling: touch !important;
+          }
+          .admin-sidebar > div:first-child::-webkit-scrollbar {
+            display: none !important;
+          }
+          .admin-sidebar > div:first-child {
+            scrollbar-width: none !important;
+          }
           .admin-sidebar button {
-            text-align: center;
+            flex: 0 0 auto !important;
+            white-space: nowrap !important;
           }
-          .admin-sidebar button span, 
+          .admin-sidebar button span {
+            display: inline !important;
+            font-size: 0.8rem !important;
+          }
           .admin-sidebar div h3, 
           .admin-sidebar div span {
             display: none !important;
           }
+          .admin-sidebar > div:last-child {
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
+            gap: 10px !important;
+            width: 100% !important;
+            margin-top: 5px !important;
+          }
+          .admin-sidebar > div:last-child button {
+            flex: 1 1 auto !important;
+            justify-content: center !important;
+            font-size: 0.8rem !important;
+            padding: 8px 12px !important;
+          }
+          .admin-sidebar > div:last-child button span {
+            display: inline !important;
+          }
           .admin-content-area {
-            padding-left: 90px !important;
+            padding: 30px 15px !important;
+            width: 100% !important;
           }
           .admin-badge-txt {
             display: none !important;

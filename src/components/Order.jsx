@@ -263,7 +263,7 @@ export default function Order({ dishes, onAddOrder, navigate }) {
 
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))',
           gap: '40px',
           alignItems: 'flex-start'
         }}>
@@ -323,7 +323,7 @@ export default function Order({ dishes, onAddOrder, navigate }) {
               </div>
 
               {/* Category Mini Tabs */}
-              <div style={{
+              <div className="category-tabs-container" style={{
                 display: 'flex',
                 gap: '8px',
                 overflowX: 'auto',
@@ -565,14 +565,15 @@ export default function Order({ dishes, onAddOrder, navigate }) {
             style={{
               width: '100%',
               maxWidth: '620px',
+              maxHeight: '90vh',
+              overflowY: 'auto',
               background: 'rgba(22, 22, 22, 0.95)',
               border: '1px solid rgba(212, 175, 55, 0.25)',
               borderRadius: 'var(--radius-lg)',
-              overflow: 'hidden',
-              boxShadow: 'var(--gold-glow-strong), 0 20px 50px rgba(0,0,0,0.9)',
               display: 'flex',
               flexDirection: 'column',
-              position: 'relative'
+              position: 'relative',
+              boxShadow: 'var(--gold-glow-strong), 0 20px 50px rgba(0,0,0,0.9)'
             }}
             onClick={(e) => e.stopPropagation()} // Prevent clicking inside from dismissing
           >
