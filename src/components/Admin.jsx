@@ -25,6 +25,7 @@ export default function Admin({
 
   // Active view: 'dashboard', 'menu', 'billing', 'history'
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [adminNavOpen, setAdminNavOpen] = useState(false);
 
   // Token History States
   const [historySearch, setHistorySearch] = useState('');
@@ -486,6 +487,147 @@ export default function Admin({
   return (
     <div className="admin-parent" style={{ display: 'flex', minHeight: '100vh', background: '#0A0A0A', padding: '90px 0 60px 0' }}>
       
+      {/* MOBILE CONSOLE DROPDOWN NAVIGATION */}
+      <div className="admin-mobile-nav glass-panel" style={{
+        display: 'none',
+        position: 'fixed',
+        top: '80px',
+        left: '15px',
+        right: '15px',
+        zIndex: 40,
+        flexDirection: 'column',
+        border: '1px solid rgba(212,175,55,0.2)',
+        background: 'rgba(17, 17, 17, 0.95)',
+        boxShadow: 'var(--gold-glow-strong)',
+        borderRadius: 'var(--radius-md)'
+      }}>
+        {/* Toggle Bar */}
+        <div 
+          onClick={() => setAdminNavOpen(!adminNavOpen)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '12px 16px',
+            cursor: 'pointer',
+            height: '50px'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.9rem' }}>
+            {activeTab === 'dashboard' && <><LayoutDashboard size={16} /> <span>Dashboard Control</span></>}
+            {activeTab === 'menu' && <><Utensils size={16} /> <span>Menu Catalog Manager</span></>}
+            {activeTab === 'billing' && <><ReceiptText size={16} /> <span>Cashier POS Terminal</span></>}
+            {activeTab === 'history' && <><History size={16} /> <span>Token History</span></>}
+          </div>
+          <span style={{ fontSize: '0.78rem', color: 'var(--primary)', fontWeight: 'bold', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            {adminNavOpen ? 'Close Menu ▲' : 'Open Menu ▼'}
+          </span>
+        </div>
+
+        {/* Dropdown Options */}
+        {adminNavOpen && (
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            borderTop: '1px solid rgba(255,255,255,0.05)',
+            padding: '12px',
+            gap: '8px',
+            maxHeight: '320px',
+            overflowY: 'auto'
+          }}>
+            {[
+              { id: 'dashboard', label: 'Dashboard Control', icon: <LayoutDashboard size={16} /> },
+              { id: 'menu', label: 'Menu Catalog Manager', icon: <Utensils size={16} /> },
+              { id: 'billing', label: 'Cashier POS Terminal', icon: <ReceiptText size={16} /> },
+              { id: 'history', label: 'Token History', icon: <History size={16} /> }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => { setActiveTab(tab.id); setAdminNavOpen(false); }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '10px 14px',
+                  borderRadius: '6px',
+                  fontSize: '0.85rem',
+                  fontWeight: '600',
+                  background: activeTab === tab.id ? 'var(--primary)' : 'rgba(255,255,255,0.02)',
+                  color: activeTab === tab.id ? '#000000' : 'var(--text-muted)',
+                  textAlign: 'left',
+                  width: '100%'
+                }}
+              >
+                {tab.icon}
+                <span>{tab.label}</span>
+              </button>
+            ))}
+
+            <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '4px 0' }} />
+
+            <button 
+              onClick={() => { navigate('/'); setAdminNavOpen(false); }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '10px 14px',
+                color: 'var(--primary)',
+                fontSize: '0.82rem',
+                fontWeight: 'bold',
+                textAlign: 'left'
+              }}
+            >
+              ← View Public Website
+            </button>
+
+            <button 
+              onClick={() => {
+                setAdminNavOpen(false);
+                if (window.confirm("Are you absolutely sure you want to reset all dishes, reviews, and orders to their default seed states? This will clear browser localStorage cache and reload the application.")) {
+                  db.resetToDefaults();
+                  window.location.reload();
+                }
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '10px 14px',
+                borderRadius: '6px',
+                background: 'rgba(255, 107, 0, 0.1)',
+                border: '1px solid rgba(255, 107, 0, 0.15)',
+                color: 'var(--secondary)',
+                fontWeight: 'bold',
+                fontSize: '0.82rem'
+              }}
+            >
+              <RefreshCw size={14} />
+              <span>Reset Demo DB</span>
+            </button>
+
+            <button 
+              onClick={() => { handleLogout(); setAdminNavOpen(false); }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '10px 14px',
+                borderRadius: '6px',
+                background: 'rgba(211, 47, 47, 0.1)',
+                border: '1px solid rgba(211, 47, 47, 0.15)',
+                color: '#f44336',
+                fontWeight: 'bold',
+                fontSize: '0.82rem'
+              }}
+            >
+              <LogOut size={14} />
+              <span>Lock Terminal</span>
+            </button>
+          </div>
+        )}
+      </div>
+      
       {/* SIDEBAR CONSOLE NAVIGATION */}
       <div style={{
         width: '260px',
@@ -597,7 +739,7 @@ export default function Admin({
             ======================================================== */}
         {activeTab === 'dashboard' && (
           <div className="animate-fade-in">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '35px' }}>
+            <div className="admin-section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '35px' }}>
               <div>
                 <h1 style={{ fontSize: '2.2rem', fontFamily: 'var(--font-heading)' }}>Dashboard Control Center</h1>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Real-time POS logs and order pipelines</p>
@@ -839,7 +981,7 @@ export default function Admin({
             ======================================================== */}
         {activeTab === 'menu' && (
           <div className="animate-fade-in">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '35px' }}>
+            <div className="admin-section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '35px' }}>
               <div>
                 <h1 style={{ fontSize: '2.2rem', fontFamily: 'var(--font-heading)' }}>Menu Catalog Manager</h1>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Update recipes, prices, and photo visuals</p>
@@ -1126,7 +1268,7 @@ export default function Admin({
             ======================================================== */}
         {activeTab === 'billing' && (
           <div className="animate-fade-in">
-            <div style={{ marginBottom: '30px' }}>
+            <div className="admin-section-header" style={{ marginBottom: '30px' }}>
               <h1 style={{ fontSize: '2.2rem', fontFamily: 'var(--font-heading)' }}>Counter POS Cashier Terminal</h1>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Direct offline customer invoicing and instant token routing</p>
             </div>
@@ -1431,7 +1573,7 @@ export default function Admin({
         {activeTab === 'history' && (
           <div className="animate-fade-in">
             {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '35px' }}>
+            <div className="admin-section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '35px' }}>
               <div>
                 <h1 style={{ fontSize: '2.2rem', fontFamily: 'var(--font-heading)' }}>Token History Pipeline</h1>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>View, track, and manage all cash tokens and self QR table tickets</p>
