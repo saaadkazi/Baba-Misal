@@ -158,11 +158,7 @@ export default function Home({ dishes, reviews, onAddReview, navigate }) {
               display: 'flex', 
               flexWrap: 'wrap', 
               gap: '15px', 
-              justifyContent: 'center',
-              background: 'rgba(0,0,0,0.2)',
-              padding: '10px',
-              borderRadius: 'var(--radius-full)',
-              backdropFilter: 'blur(3px)'
+              justifyContent: 'center'
             }}>
               <a href="#menu" className="btn btn-primary" onClick={(e) => {
                 e.preventDefault();
