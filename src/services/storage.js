@@ -27,7 +27,7 @@ const DEFAULT_DISHES = [
     description: "A rich combination of authentic spicy misal loaded with melting mozzarella cheese. Dampens the heat and tastes absolutely divine.",
     price: 160,
     category: "Misal",
-    image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&q=80&w=600"
+    image: "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&q=80&w=600"
   },
   {
     id: "dish-4",
@@ -35,7 +35,7 @@ const DEFAULT_DISHES = [
     description: "Crispy fried golden potato fritters seasoned with mustard seeds, green chillies, and garlic, served with spicy green chutney.",
     price: 60,
     category: "Snacks",
-    image: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&q=80&w=600"
+    image: "https://images.unsplash.com/photo-1626132647523-66f5bf380027?auto=format&fit=crop&q=80&w=600"
   },
   {
     id: "dish-5",
@@ -43,7 +43,7 @@ const DEFAULT_DISHES = [
     description: "Crunchy batter-fried onions seasoned with traditional spices, perfect pairing with Masala Chai on a rainy evening.",
     price: 70,
     category: "Snacks",
-    image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?auto=format&fit=crop&q=80&w=600"
+    image: "https://images.unsplash.com/photo-1599307767316-776533bb941c?auto=format&fit=crop&q=80&w=600"
   },
   {
     id: "dish-6",
@@ -51,7 +51,7 @@ const DEFAULT_DISHES = [
     description: "Traditional refreshing Konkani digestif beverage made from Kokum fruit extract and fresh coconut milk, with garlic and green chillies.",
     price: 50,
     category: "Beverages",
-    image: "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&q=80&w=600"
+    image: "https://images.unsplash.com/photo-1553530666-ba11a7da3888?auto=format&fit=crop&q=80&w=600"
   },
   {
     id: "dish-7",
@@ -67,7 +67,7 @@ const DEFAULT_DISHES = [
     description: "1x Special Baba Misal Pav, 1x Single Batata Vada, 1x Glass of Solkadhi. Complete traditional feast at an unbeatable value.",
     price: 210,
     category: "Combos",
-    image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?auto=format&fit=crop&q=80&w=600"
+    image: "https://images.unsplash.com/photo-1618040981119-e58f6bcf2cc5?auto=format&fit=crop&q=80&w=600"
   },
   {
     id: "dish-9",
@@ -75,7 +75,7 @@ const DEFAULT_DISHES = [
     description: "Get our popular Special Baba Misal Pav paired with a sweet, soothing glass of rich Alphonso Mango Lassi.",
     price: 190,
     category: "Combos",
-    image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&q=80&w=600"
+    image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?auto=format&fit=crop&q=80&w=600"
   },
   {
     id: "dish-10",
@@ -83,7 +83,7 @@ const DEFAULT_DISHES = [
     description: "Sweet, cardamom-infused yellow lentil flatbread cooked in pure homemade A2 ghee, served hot.",
     price: 90,
     category: "Special Dishes",
-    image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?auto=format&fit=crop&q=80&w=600"
+    image: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&q=80&w=600"
   }
 ];
 
@@ -264,5 +264,14 @@ export const db = {
       localStorage.setItem("orders", JSON.stringify(orders));
     }
     return orders;
+  },
+
+  // Reset database state completely
+  resetToDefaults: () => {
+    localStorage.removeItem("dishes");
+    localStorage.removeItem("reviews");
+    localStorage.removeItem("orders");
+    localStorage.removeItem("last_token");
+    initDB();
   }
 };

@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { User, Phone, ShoppingBag, Receipt, ChevronRight, CheckCircle2, Ticket, ArrowLeft, RotateCcw } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { User, Phone, ShoppingBag, Receipt, ChevronRight, CheckCircle2, Ticket, ArrowLeft, RotateCcw, X, Flame, Clock } from 'lucide-react';
 
 export default function Order({ dishes, onAddOrder, navigate }) {
   // Customer info states
@@ -15,7 +15,26 @@ export default function Order({ dishes, onAddOrder, navigate }) {
   const [checkedOut, setCheckedOut] = useState(false);
   const [generatedToken, setGeneratedToken] = useState(null);
   
+  // Dish details popup overlay state
+  const [selectedDish, setSelectedDish] = useState(null);
+
+  // Dismiss details modal on pressing ESC key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setSelectedDish(null);
+      }
+    };
+    if (selectedDish) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedDish]);
+  
   // Filter category state inside ordering page
+
   const [activeCat, setActiveCat] = useState('All');
   const categories = ['All', 'Misal', 'Snacks', 'Beverages', 'Combos'];
 
@@ -352,18 +371,24 @@ export default function Order({ dishes, onAddOrder, navigate }) {
                         position: 'relative'
                       }}
                     >
-                      <img 
-                        src={dish.image} 
-                        alt={dish.name} 
-                        style={{ width: '70px', height: '70px', objectFit: 'cover', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }} 
-                      />
-                      
-                      <div style={{ flexGrow: 1 }}>
-                        <h4 style={{ fontSize: '0.95rem', fontWeight: '600' }}>{dish.name}</h4>
-                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: '1.3', margin: '4px 0' }}>
-                          {dish.description.slice(0, 50)}...
-                        </p>
-                        <span style={{ fontSize: '0.95rem', color: 'var(--primary)', fontWeight: 'bold' }}>₹{dish.price}</span>
+                      {/* Left Side: Photo + Name + Price (Clickable to view details) */}
+                      <div 
+                        style={{ display: 'flex', gap: '12px', flexGrow: 1, cursor: 'pointer', alignItems: 'center' }}
+                        onClick={() => setSelectedDish(dish)}
+                      >
+                        <img 
+                          src={dish.image} 
+                          alt={dish.name} 
+                          style={{ width: '68px', height: '68px', objectFit: 'cover', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }} 
+                        />
+                        
+                        <div style={{ flexGrow: 1 }}>
+                          <h4 style={{ fontSize: '0.95rem', fontWeight: '600', color: '#FFFFFF' }}>{dish.name}</h4>
+                          <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', lineHeight: '1.3', margin: '4px 0 6px 0' }}>
+                            {dish.description.slice(0, 48)}...
+                          </p>
+                          <span style={{ fontSize: '0.9rem', color: 'var(--primary)', fontWeight: 'bold' }}>₹{dish.price}</span>
+                        </div>
                       </div>
 
                       {/* Quantity Controls */}
@@ -516,6 +541,207 @@ export default function Order({ dishes, onAddOrder, navigate }) {
           </div>
         </div>
       </div>
+
+      {/* ================= DISH DETAILS POPUP OVERLAY ================= */}
+      {selectedDish && (
+        <div 
+          className="animate-fade-in"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.85)',
+            backdropFilter: 'blur(15px)',
+            WebkitBackdropFilter: 'blur(15px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '20px'
+          }}
+          onClick={() => setSelectedDish(null)} // Dismiss by clicking backdrop
+        >
+          <div 
+            className="glass-panel animate-fade-in-up"
+            style={{
+              width: '100%',
+              maxWidth: '620px',
+              background: 'rgba(22, 22, 22, 0.95)',
+              border: '1px solid rgba(212, 175, 55, 0.25)',
+              borderRadius: 'var(--radius-lg)',
+              overflow: 'hidden',
+              boxShadow: 'var(--gold-glow-strong), 0 20px 50px rgba(0,0,0,0.9)',
+              display: 'flex',
+              flexDirection: 'column',
+              position: 'relative'
+            }}
+            onClick={(e) => e.stopPropagation()} // Prevent clicking inside from dismissing
+          >
+            {/* Close Button ("Wrong" Button) */}
+            <button 
+              onClick={() => setSelectedDish(null)}
+              style={{
+                position: 'absolute',
+                top: '15px',
+                right: '15px',
+                background: 'rgba(0,0,0,0.6)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: 'var(--primary)',
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 10,
+                transition: 'var(--transition)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'scale(1.1) rotate(90deg)';
+                e.currentTarget.style.borderColor = 'var(--primary)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1) rotate(0deg)';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+              }}
+            >
+              <X size={18} />
+            </button>
+
+            {/* Visual Section: Large Image */}
+            <div style={{ width: '100%', height: '240px', position: 'relative' }}>
+              <img 
+                src={selectedDish.image} 
+                alt={selectedDish.name} 
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+              />
+              <div style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                background: 'linear-gradient(to top, rgba(22,22,22,1) 0%, rgba(22,22,22,0) 100%)',
+                height: '80px'
+              }} />
+              <span className="badge badge-gold" style={{ position: 'absolute', top: '20px', left: '20px', backdropFilter: 'blur(5px)', fontSize: '0.75rem', padding: '5px 12px' }}>
+                {selectedDish.category}
+              </span>
+            </div>
+
+            {/* Content Section */}
+            <div style={{ padding: '25px 30px 30px 30px', marginTop: '-15px', position: 'relative', zIndex: 2 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                <h2 style={{ fontSize: '1.8rem', fontFamily: 'var(--font-heading)', color: '#FFFFFF' }}>{selectedDish.name}</h2>
+                <span style={{ fontSize: '1.8rem', color: 'var(--primary)', fontWeight: '800' }}>₹{selectedDish.price}</span>
+              </div>
+
+              {/* Spicy rating & Prep time row */}
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '20px' }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'rgba(255, 107, 0, 0.1)',
+                  border: '1px solid rgba(255, 107, 0, 0.25)',
+                  padding: '5px 12px',
+                  borderRadius: 'var(--radius-sm)',
+                  fontSize: '0.8rem',
+                  color: 'var(--secondary)'
+                }}>
+                  <Flame size={12} fill="var(--secondary)" />
+                  <span style={{ fontWeight: '700' }}>
+                    {selectedDish.category === 'Beverages' ? 'Refreshing Digestif' : 
+                     selectedDish.name.toLowerCase().includes('spicy') ? 'Extra Hot (5/5 Spice)' : 'Medium Heat (3/5 Spice)'}
+                  </span>
+                </div>
+
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'rgba(212, 175, 55, 0.1)',
+                  border: '1px solid rgba(212, 175, 55, 0.25)',
+                  padding: '5px 12px',
+                  borderRadius: 'var(--radius-sm)',
+                  fontSize: '0.8rem',
+                  color: 'var(--primary)'
+                }}>
+                  <Clock size={12} />
+                  <span style={{ fontWeight: '700' }}>Prep: {selectedDish.category === 'Beverages' ? '2 Mins' : '8 Mins'}</span>
+                </div>
+              </div>
+
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: '1.6', marginBottom: '10px' }}>
+                {selectedDish.description}
+              </p>
+
+              {/* Interactive Quantity Controls directly in details overlay */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '20px',
+                background: 'rgba(0,0,0,0.3)',
+                border: '1px solid rgba(255,255,255,0.05)',
+                padding: '10px 20px',
+                borderRadius: 'var(--radius-md)',
+                margin: '20px 0 15px 0'
+              }}>
+                <span style={{ fontSize: '0.88rem', fontWeight: '600', color: 'var(--text-muted)' }}>Quantity:</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                  <button 
+                    type="button"
+                    onClick={() => updateQuantity(selectedDish.id, -1)}
+                    className="btn btn-secondary"
+                    style={{ width: '32px', height: '32px', padding: 0, borderRadius: '50%', minWidth: '32px', fontSize: '1rem' }}
+                  >
+                    -
+                  </button>
+                  <span style={{ fontSize: '1.1rem', fontWeight: 'bold', minWidth: '30px', textAlign: 'center' }}>
+                    {cart[selectedDish.id] || 0}
+                  </span>
+                  <button 
+                    type="button"
+                    onClick={() => updateQuantity(selectedDish.id, 1)}
+                    className="btn btn-primary"
+                    style={{ width: '32px', height: '32px', padding: 0, borderRadius: '50%', minWidth: '32px', fontSize: '1rem' }}
+                  >
+                    +
+                  </button>
+                </div>
+                {cart[selectedDish.id] > 0 && (
+                  <span style={{ fontSize: '0.85rem', color: 'var(--primary)', fontWeight: 'bold', marginLeft: 'auto' }}>
+                    Subtotal: ₹{selectedDish.price * cart[selectedDish.id]}
+                  </span>
+                )}
+              </div>
+
+              {/* Allergen & Ingredients notes */}
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '12px', marginBottom: '20px' }}>
+                <h4 style={{ fontSize: '0.78rem', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
+                  Dietary Highlights & Allergens
+                </h4>
+                <p style={{ fontSize: '0.75rem', color: '#777', lineHeight: '1.4' }}>
+                  * Prepared using cold-pressed peanut oil. <br />
+                  {selectedDish.category === 'Beverages' ? '* Natural fresh coconut milk base / premium curd and nuts.' : 
+                   selectedDish.category === 'Misal' ? '* Sprouts contain natural mustard seeds, dairy ghee and home-ground farsan.' : 
+                   '* Locally sourced high-quality ingredients.'}
+                </p>
+              </div>
+
+              {/* CTA */}
+              <div style={{ display: 'flex', gap: '15px' }}>
+                <button 
+                  onClick={() => setSelectedDish(null)} 
+                  className="btn btn-primary" 
+                  style={{ flexGrow: 1, padding: '12px', fontSize: '0.85rem' }}
+                >
+                  Return to Order Grid
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

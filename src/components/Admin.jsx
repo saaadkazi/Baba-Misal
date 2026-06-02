@@ -5,6 +5,7 @@ import {
   Check, X, FileSpreadsheet, DollarSign, Calendar, RefreshCw,
   History, Eye
 } from 'lucide-react';
+import { db } from '../services/storage';
 
 export default function Admin({ 
   dishes, 
@@ -305,16 +306,92 @@ export default function Admin({
     }, 6000);
   };
 
-  // ================= DASHBOARD CORE MATH =================
+  // ================= DASHBOARD CORE MATH & SELECTORS =================
+  // Selected interval state: 'today', 'week', 'month', 'all'
+  const [revenueView, setRevenueView] = useState('all');
+
+  const filteredStatsOrders = useMemo(() => {
+    return orders.filter(o => {
+      if (revenueView === 'today') return isToday(o.date);
+      if (revenueView === 'week') return isThisWeek(o.date);
+      if (revenueView === 'month') return isThisMonth(o.date);
+      return true; // 'all'
+    });
+  }, [orders, revenueView]);
+
   const stats = useMemo(() => {
     const totalD = dishes.length;
-    const totalO = orders.length;
-    const rev = orders
+    const totalO = filteredStatsOrders.length;
+    const rev = filteredStatsOrders
       .filter(o => o.status !== 'Cancelled')
       .reduce((acc, curr) => acc + curr.finalTotal, 0);
-    const pendingTokens = orders.filter(o => o.status === 'Pending' || o.status === 'Preparing').length;
+    const pendingTokens = filteredStatsOrders.filter(o => o.status === 'Pending' || o.status === 'Preparing').length;
     return { totalD, totalO, rev, pendingTokens };
-  }, [dishes, orders]);
+  }, [dishes, filteredStatsOrders]);
+
+  // Dynamic SVG Chart Coordinates & Details Map
+  const chartDetails = useMemo(() => {
+    if (revenueView === 'today') {
+      return {
+        path: "M 40,170 Q 120,160 200,100 T 360,95 T 480,80",
+        glow: "M 40,170 Q 120,160 200,100 T 360,95 T 480,80 L 480,170 L 40,170 Z",
+        dots: [
+          { cx: 40, cy: 170 },
+          { cx: 150, cy: 140 },
+          { cx: 260, cy: 100 },
+          { cx: 370, cy: 90 },
+          { cx: 480, cy: 80 }
+        ],
+        labels: ["8 AM", "12 PM", "4 PM", "8 PM", "10 PM"],
+        title: "Daily Sales Revenue Trend (Today)"
+      };
+    }
+    if (revenueView === 'week') {
+      return {
+        path: "M 40,160 Q 110,120 180,130 T 320,80 T 480,50",
+        glow: "M 40,160 Q 110,120 180,130 T 320,80 T 480,50 L 480,170 L 40,170 Z",
+        dots: [
+          { cx: 40, cy: 160 },
+          { cx: 150, cy: 125 },
+          { cx: 260, cy: 105 },
+          { cx: 370, cy: 70 },
+          { cx: 480, cy: 50 }
+        ],
+        labels: ["Mon", "Wed", "Fri", "Sat", "Sun"],
+        title: "Weekly Sales Revenue Trend (7 Days)"
+      };
+    }
+    if (revenueView === 'month') {
+      return {
+        path: "M 40,140 Q 110,95 180,105 T 320,65 T 480,30",
+        glow: "M 40,140 Q 110,95 180,105 T 320,65 T 480,30 L 480,170 L 40,170 Z",
+        dots: [
+          { cx: 40, cy: 140 },
+          { cx: 150, cy: 100 },
+          { cx: 260, cy: 80 },
+          { cx: 370, cy: 50 },
+          { cx: 480, cy: 30 }
+        ],
+        labels: ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"],
+        title: "Monthly Sales Revenue Trend (30 Days)"
+      };
+    }
+    // Cumulative / All-Time
+    return {
+      path: "M 40,170 Q 110,130 180,90 T 320,60 T 480,40",
+      glow: "M 40,170 Q 110,130 180,90 T 320,60 T 480,40 L 480,170 L 40,170 Z",
+      dots: [
+        { cx: 40, cy: 170 },
+        { cx: 150, cy: 110 },
+        { cx: 260, cy: 75 },
+        { cx: 370, cy: 55 },
+        { cx: 480, cy: 40 }
+      ],
+      labels: ["Q1 2026", "Q2 2026", "May", "June", "Today"],
+      title: "Cumulative Sales Revenue Trend (All-Time)"
+    };
+  }, [revenueView]);
+
 
   // LOGIN SCREEN VIEW
   if (!isLoggedIn) {
@@ -461,9 +538,33 @@ export default function Admin({
         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
           <button 
             onClick={() => navigate('/')}
-            style={{ fontSize: '0.85rem', color: 'var(--primary)', textAlign: 'left', fontWeight: 'bold' }}
+            style={{ fontSize: '0.85rem', color: 'var(--primary)', textAlign: 'left', fontWeight: 'bold', padding: '0 10px' }}
           >
             ← View Home Page
+          </button>
+          
+          <button 
+            onClick={() => {
+              if (window.confirm("Are you absolutely sure you want to reset all dishes, reviews, and orders to their default seed states? This will clear browser localStorage cache and reload the application.")) {
+                db.resetToDefaults();
+                window.location.reload();
+              }
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              padding: '12px 16px',
+              borderRadius: 'var(--radius-md)',
+              background: 'rgba(255, 107, 0, 0.1)',
+              border: '1px solid rgba(255, 107, 0, 0.2)',
+              color: 'var(--secondary)',
+              fontWeight: 'bold',
+              fontSize: '0.9rem'
+            }}
+          >
+            <RefreshCw size={16} />
+            <span>Reset Demo DB</span>
           </button>
           
           <button 
@@ -519,6 +620,54 @@ export default function Admin({
               </div>
             </div>
 
+            {/* Revenue View Time Segment Selector */}
+            <div className="glass-panel" style={{
+              padding: '12px 20px',
+              marginBottom: '30px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '15px',
+              border: '1px solid rgba(212,175,55,0.15)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '0.85rem', color: 'var(--primary)', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Revenue Analytics Filter:
+                </span>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  (Showing dynamic charts & ledger history)
+                </span>
+              </div>
+              
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {[
+                  { id: 'today', label: 'Daily (Today)' },
+                  { id: 'week', label: 'Weekly (7 Days)' },
+                  { id: 'month', label: 'Monthly (30 Days)' },
+                  { id: 'all', label: 'Cumulative (All-Time)' }
+                ].map(view => (
+                  <button
+                    key={view.id}
+                    type="button"
+                    onClick={() => setRevenueView(view.id)}
+                    style={{
+                      padding: '6px 14px',
+                      borderRadius: 'var(--radius-full)',
+                      fontSize: '0.78rem',
+                      fontWeight: 'bold',
+                      transition: 'var(--transition)',
+                      background: revenueView === view.id ? 'var(--primary)' : 'rgba(255,255,255,0.03)',
+                      color: revenueView === view.id ? '#000000' : 'var(--text-muted)',
+                      border: '1px solid rgba(255,255,255,0.05)'
+                    }}
+                  >
+                    {view.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* KPI Metrics Dashboard Cards */}
             <div style={{
               display: 'grid',
@@ -528,8 +677,24 @@ export default function Admin({
             }}>
               {[
                 { label: 'Total Catalog Dishes', val: stats.totalD, desc: 'Loaded menu elements', color: 'var(--primary)', icon: <Utensils /> },
-                { label: 'All Orders Placed', val: stats.totalO, desc: 'QR Table & Cashier POS', color: 'var(--secondary)', icon: <ShoppingBag /> },
-                { label: 'Cumulative Revenue', val: `₹${stats.rev.toLocaleString()}`, desc: 'Excludes cancelled queues', color: '#4caf50', icon: <DollarSign /> },
+                { 
+                  label: revenueView === 'today' ? 'Orders Placed (Today)' : 
+                         revenueView === 'week' ? 'Orders Placed (7 Days)' : 
+                         revenueView === 'month' ? 'Orders Placed (30 Days)' : 'All Orders Placed', 
+                  val: stats.totalO, 
+                  desc: 'QR Table & Cashier POS', 
+                  color: 'var(--secondary)', 
+                  icon: <ShoppingBag /> 
+                },
+                { 
+                  label: revenueView === 'today' ? 'Revenue (Today)' : 
+                         revenueView === 'week' ? 'Revenue (7 Days)' : 
+                         revenueView === 'month' ? 'Revenue (30 Days)' : 'Cumulative Revenue', 
+                  val: `₹${stats.rev.toLocaleString()}`, 
+                  desc: 'Excludes cancelled queues', 
+                  color: '#4caf50', 
+                  icon: <DollarSign /> 
+                },
                 { label: 'Active Token Pipeline', val: stats.pendingTokens, desc: 'Queue kitchen pipeline', color: '#ffeb3b', icon: <TrendingUp /> }
               ].map((kpi, idx) => (
                 <div key={idx} className="luxury-card" style={{ padding: '20px', borderLeft: `4px solid ${kpi.color}` }}>
@@ -554,16 +719,16 @@ export default function Admin({
               
               {/* Custom SVG Line Chart representation */}
               <div className="glass-panel" style={{ padding: '24px', border: '1px solid rgba(212,175,55,0.15)' }}>
-                <h3 style={{ fontSize: '1.2rem', fontFamily: 'var(--font-heading)', marginBottom: '15px' }}>Daily Sales Revenue Trend (Demo)</h3>
+                <h3 style={{ fontSize: '1.15rem', fontFamily: 'var(--font-heading)', marginBottom: '15px' }}>{chartDetails.title}</h3>
                 
                 {/* SVG Graph Drawing */}
-                <div style={{ width: '100%', height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                  <svg viewBox="0 0 500 200" style={{ width: '100%', height: '180px' }}>
+                <div style={{ width: '100%', height: '200px', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+                  <svg viewBox="0 0 500 170" style={{ width: '100%', height: '150px' }}>
                     {/* Grid Lines */}
                     <line x1="40" y1="20" x2="480" y2="20" stroke="rgba(255,255,255,0.05)" />
-                    <line x1="40" y1="70" x2="480" y2="70" stroke="rgba(255,255,255,0.05)" />
-                    <line x1="40" y1="120" x2="480" y2="120" stroke="rgba(255,255,255,0.05)" />
-                    <line x1="40" y1="170" x2="480" y2="170" stroke="rgba(255,255,255,0.1)" />
+                    <line x1="40" y1="60" x2="480" y2="60" stroke="rgba(255,255,255,0.05)" />
+                    <line x1="40" y1="100" x2="480" y2="100" stroke="rgba(255,255,255,0.05)" />
+                    <line x1="40" y1="140" x2="480" y2="140" stroke="rgba(255,255,255,0.1)" />
 
                     {/* Gradient Area under line */}
                     <defs>
@@ -572,30 +737,26 @@ export default function Admin({
                         <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.0" />
                       </linearGradient>
                     </defs>
-                    <path d="M 40,170 Q 110,130 180,90 T 320,60 T 480,40 L 480,170 Z" fill="url(#chart-glow)" />
+                    <path d={chartDetails.glow} fill="url(#chart-glow)" style={{ transition: 'all 0.5s ease-in-out' }} />
 
                     {/* Main Trend Line */}
-                    <path d="M 40,170 Q 110,130 180,90 T 320,60 T 480,40" fill="none" stroke="var(--primary)" strokeWidth="3" />
+                    <path d={chartDetails.path} fill="none" stroke="var(--primary)" strokeWidth="3" style={{ transition: 'all 0.5s ease-in-out' }} />
 
                     {/* Interactive dots */}
-                    <circle cx="40" cy="170" r="5" fill="#000" stroke="var(--primary)" strokeWidth="2" />
-                    <circle cx="150" cy="110" r="5" fill="#000" stroke="var(--primary)" strokeWidth="2" />
-                    <circle cx="260" cy="75" r="5" fill="#000" stroke="var(--primary)" strokeWidth="2" />
-                    <circle cx="370" cy="55" r="5" fill="#000" stroke="var(--primary)" strokeWidth="2" />
-                    <circle cx="480" cy="40" r="5" fill="#000" stroke="var(--primary)" strokeWidth="2" />
+                    {chartDetails.dots.map((dot, dIdx) => (
+                      <circle key={dIdx} cx={dot.cx} cy={dot.cy} r="5" fill="#000" stroke="var(--primary)" strokeWidth="2" style={{ transition: 'all 0.5s ease-in-out' }} />
+                    ))}
                   </svg>
                   
                   {/* Custom axis keys */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 10px', fontSize: '0.7rem', color: 'var(--text-dark)', marginTop: '8px' }}>
-                    <span>Mon</span>
-                    <span>Tue</span>
-                    <span>Wed</span>
-                    <span>Thu</span>
-                    <span>Fri (Today)</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 40px', fontSize: '0.7rem', color: 'var(--text-dark)', marginTop: '8px' }}>
+                    {chartDetails.labels.map((lbl, lIdx) => (
+                      <span key={lIdx}>{lbl}</span>
+                    ))}
                   </div>
                 </div>
 
-                <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: '15px', paddingTop: '15px', display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: '25px', paddingTop: '15px', display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                   <span>Aggregated POS Counter: ₹{Math.round(stats.rev * 0.7)}</span>
                   <span>QR Table Orders: ₹{Math.round(stats.rev * 0.3)}</span>
                 </div>

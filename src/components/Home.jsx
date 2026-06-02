@@ -1,17 +1,36 @@
-import React, { useState, useMemo } from 'react';
-import { Star, MapPin, Phone, Mail, Clock, ShieldCheck, Heart, Sparkles, Flame, Search } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Star, MapPin, Phone, Mail, Clock, ShieldCheck, Heart, Sparkles, Flame, Search, X } from 'lucide-react';
 
 export default function Home({ dishes, reviews, onAddReview, navigate }) {
   // Menu selection & search states
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   
+  // Dish detail popup modal state
+  const [selectedDish, setSelectedDish] = useState(null);
+
+  // Dismiss details modal on pressing ESC key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setSelectedDish(null);
+      }
+    };
+    if (selectedDish) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedDish]);
+
   // Review form states
   const [reviewName, setReviewName] = useState('');
   const [reviewText, setReviewText] = useState('');
   const [reviewRating, setReviewRating] = useState(5);
   const [hoverRating, setHoverRating] = useState(0);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
+
 
   // Contact form states
   const [contactName, setContactName] = useState('');
@@ -98,6 +117,29 @@ export default function Home({ dishes, reviews, onAddReview, navigate }) {
         >
           <source src="/hero.mp4" type="video/mp4" />
         </video>
+        
+        {/* Floating Embers Background Effect */}
+        <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', zIndex: 1, pointerEvents: 'none' }}>
+          {Array.from({ length: 15 }).map((_, i) => {
+            const size = Math.random() * 5 + 2; // 2px to 7px
+            const left = Math.random() * 100; // 0% to 100%
+            const delay = Math.random() * 6; // 0s to 6s
+            const duration = Math.random() * 4 + 4; // 4s to 8s
+            return (
+              <div 
+                key={i} 
+                className="ember-particle" 
+                style={{
+                  width: `${size}px`,
+                  height: `${size}px`,
+                  left: `${left}%`,
+                  animationDelay: `${delay}s`,
+                  animationDuration: `${duration}s`,
+                }}
+              />
+            );
+          })}
+        </div>
         
         <div className="container" style={{ position: 'relative', zIndex: 2 }}>
           <div style={{
@@ -230,7 +272,12 @@ export default function Home({ dishes, reviews, onAddReview, navigate }) {
             gap: '30px'
           }}>
             {featuredDishes.map((dish) => (
-              <div key={dish.id} className="luxury-card" style={{ display: 'flex', flexDirection: 'column' }}>
+              <div 
+                key={dish.id} 
+                className="luxury-card" 
+                style={{ display: 'flex', flexDirection: 'column', cursor: 'pointer' }}
+                onClick={() => setSelectedDish(dish)}
+              >
                 <div style={{
                   width: '100%',
                   height: '200px',
@@ -256,7 +303,7 @@ export default function Home({ dishes, reviews, onAddReview, navigate }) {
                 </p>
 
                 <button 
-                  onClick={() => navigate('/order')}
+                  onClick={(e) => { e.stopPropagation(); navigate('/order'); }}
                   className="btn btn-secondary" 
                   style={{ width: '100%', fontSize: '0.8rem', padding: '10px' }}
                 >
@@ -351,7 +398,12 @@ export default function Home({ dishes, reviews, onAddReview, navigate }) {
               gap: '30px'
             }}>
               {filteredDishes.map((dish) => (
-                <div key={dish.id} className="luxury-card" style={{ display: 'flex', flexDirection: 'column' }}>
+                <div 
+                  key={dish.id} 
+                  className="luxury-card" 
+                  style={{ display: 'flex', flexDirection: 'column', cursor: 'pointer' }}
+                  onClick={() => setSelectedDish(dish)}
+                >
                   <div style={{
                     width: '100%',
                     height: '180px',
@@ -377,7 +429,7 @@ export default function Home({ dishes, reviews, onAddReview, navigate }) {
                   </p>
 
                   <button 
-                    onClick={() => navigate('/order')}
+                    onClick={(e) => { e.stopPropagation(); navigate('/order'); }}
                     className="btn btn-secondary" 
                     style={{ width: '100%', fontSize: '0.75rem', padding: '8px' }}
                   >
@@ -1055,6 +1107,176 @@ export default function Home({ dishes, reviews, onAddReview, navigate }) {
           }
         `}</style>
       </section>
+
+      {/* ================= DISH DETAILS POPUP OVERLAY ================= */}
+      {selectedDish && (
+        <div 
+          className="animate-fade-in"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.85)',
+            backdropFilter: 'blur(15px)',
+            WebkitBackdropFilter: 'blur(15px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '20px'
+          }}
+          onClick={() => setSelectedDish(null)} // Dismiss by clicking backdrop
+        >
+          <div 
+            className="glass-panel animate-fade-in-up"
+            style={{
+              width: '100%',
+              maxWidth: '620px',
+              background: 'rgba(22, 22, 22, 0.95)',
+              border: '1px solid rgba(212, 175, 55, 0.25)',
+              borderRadius: 'var(--radius-lg)',
+              overflow: 'hidden',
+              boxShadow: 'var(--gold-glow-strong), 0 20px 50px rgba(0,0,0,0.9)',
+              display: 'flex',
+              flexDirection: 'column',
+              position: 'relative'
+            }}
+            onClick={(e) => e.stopPropagation()} // Prevent clicking inside from dismissing
+          >
+            {/* Close Button ("Wrong" Button) */}
+            <button 
+              onClick={() => setSelectedDish(null)}
+              style={{
+                position: 'absolute',
+                top: '15px',
+                right: '15px',
+                background: 'rgba(0,0,0,0.6)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: 'var(--primary)',
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 10,
+                transition: 'var(--transition)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'scale(1.1) rotate(90deg)';
+                e.currentTarget.style.borderColor = 'var(--primary)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1) rotate(0deg)';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+              }}
+            >
+              <X size={18} />
+            </button>
+
+            {/* Visual Section: Large Image */}
+            <div style={{ width: '100%', height: '240px', position: 'relative' }}>
+              <img 
+                src={selectedDish.image} 
+                alt={selectedDish.name} 
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+              />
+              <div style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                background: 'linear-gradient(to top, rgba(22,22,22,1) 0%, rgba(22,22,22,0) 100%)',
+                height: '80px'
+              }} />
+              <span className="badge badge-gold" style={{ position: 'absolute', top: '20px', left: '20px', backdropFilter: 'blur(5px)', fontSize: '0.75rem', padding: '5px 12px' }}>
+                {selectedDish.category}
+              </span>
+            </div>
+
+            {/* Content Section */}
+            <div style={{ padding: '25px 30px 30px 30px', marginTop: '-15px', position: 'relative', zIndex: 2 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                <h2 style={{ fontSize: '1.8rem', fontFamily: 'var(--font-heading)', color: '#FFFFFF' }}>{selectedDish.name}</h2>
+                <span style={{ fontSize: '1.8rem', color: 'var(--primary)', fontWeight: '800' }}>₹{selectedDish.price}</span>
+              </div>
+
+              {/* Spicy rating & Prep time row */}
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '20px' }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'rgba(255, 107, 0, 0.1)',
+                  border: '1px solid rgba(255, 107, 0, 0.25)',
+                  padding: '5px 12px',
+                  borderRadius: 'var(--radius-sm)',
+                  fontSize: '0.8rem',
+                  color: 'var(--secondary)'
+                }}>
+                  <Flame size={12} fill="var(--secondary)" />
+                  <span style={{ fontWeight: '700' }}>
+                    {selectedDish.category === 'Beverages' ? 'Refreshing Digestif' : 
+                     selectedDish.name.toLowerCase().includes('spicy') ? 'Extra Hot (5/5 Spice)' : 'Medium Heat (3/5 Spice)'}
+                  </span>
+                </div>
+
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'rgba(212, 175, 55, 0.1)',
+                  border: '1px solid rgba(212, 175, 55, 0.25)',
+                  padding: '5px 12px',
+                  borderRadius: 'var(--radius-sm)',
+                  fontSize: '0.8rem',
+                  color: 'var(--primary)'
+                }}>
+                  <Clock size={12} />
+                  <span style={{ fontWeight: '700' }}>Prep: {selectedDish.category === 'Beverages' ? '2 Mins' : '8 Mins'}</span>
+                </div>
+              </div>
+
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: '1.6', marginBottom: '20px' }}>
+                {selectedDish.description}
+              </p>
+
+              {/* Allergen & Ingredients notes */}
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '15px', marginBottom: '25px' }}>
+                <h4 style={{ fontSize: '0.8rem', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
+                  Dietary Highlights & Allergens
+                </h4>
+                <p style={{ fontSize: '0.78rem', color: '#777', lineHeight: '1.4' }}>
+                  * Prepared using cold-pressed peanut oil. <br />
+                  {selectedDish.category === 'Beverages' ? '* Natural fresh coconut milk base / premium curd and nuts.' : 
+                   selectedDish.category === 'Misal' ? '* Sprouts contain natural mustard seeds, dairy ghee and home-ground farsan.' : 
+                   '* Locally sourced high-quality ingredients.'}
+                </p>
+              </div>
+
+              {/* CTA */}
+              <div style={{ display: 'flex', gap: '15px' }}>
+                <button 
+                  onClick={() => {
+                    setSelectedDish(null);
+                    navigate('/order');
+                  }} 
+                  className="btn btn-primary" 
+                  style={{ flexGrow: 1, padding: '12px', fontSize: '0.85rem' }}
+                >
+                  Order At Table (QR)
+                </button>
+                <button 
+                  onClick={() => setSelectedDish(null)} 
+                  className="btn btn-secondary" 
+                  style={{ flexGrow: 1, padding: '12px', fontSize: '0.85rem' }}
+                >
+                  Dismiss details
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
