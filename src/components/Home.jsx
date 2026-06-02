@@ -73,175 +73,101 @@ export default function Home({ dishes, reviews, onAddReview, navigate }) {
       {/* ================= HERO SECTION ================= */}
       <section className="hero-section" style={{
         position: 'relative',
-        padding: '160px 0 100px 0',
-        background: 'radial-gradient(circle at 50% 30%, rgba(212, 175, 55, 0.08) 0%, rgba(15, 15, 15, 0) 70%)',
+        padding: '200px 0 160px 0',
+        background: '#000000',
         overflow: 'hidden',
-        borderBottom: '1px solid rgba(212, 175, 55, 0.05)'
+        borderBottom: '1px solid rgba(212, 175, 55, 0.15)'
       }}>
-        {/* Floating background glowing amber balls */}
-        <div style={{
-          position: 'absolute',
-          width: '300px',
-          height: '300px',
-          background: 'var(--gradient-gold-orange)',
-          filter: 'blur(150px)',
-          opacity: 0.1,
-          top: '20%',
-          right: '5%',
-          pointerEvents: 'none'
-        }} />
+        {/* Background Video */}
+        <video 
+          autoPlay 
+          muted 
+          loop 
+          playsInline 
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            zIndex: 0,
+            opacity: 1.0, /* Set to 100% full clarity as requested */
+            pointerEvents: 'none'
+          }}
+        >
+          <source src="/hero.mp4" type="video/mp4" />
+        </video>
         
-        <div className="container">
+        <div className="container" style={{ position: 'relative', zIndex: 2 }}>
           <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: '40px',
-            alignItems: 'center'
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            textAlign: 'center',
+            maxWidth: '750px',
+            margin: '0 auto'
           }}>
-            <div style={{ maxWidth: '580px' }}>
-              <div style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                background: 'rgba(255, 107, 0, 0.1)',
-                border: '1px solid rgba(255, 107, 0, 0.2)',
-                padding: '6px 16px',
-                borderRadius: 'var(--radius-full)',
-                marginBottom: '20px',
-                fontSize: '0.85rem',
-                fontWeight: '600',
-                color: 'var(--secondary)'
-              }}>
-                <Flame size={14} style={{ color: 'var(--secondary)' }} />
-                <span>The Pride of Maharashtra</span>
-              </div>
-              
-              <h1 style={{
-                fontSize: 'clamp(2.5rem, 5vw, 4rem)',
-                lineHeight: '1.1',
-                marginBottom: '20px',
-                fontFamily: 'var(--font-heading)'
-              }}>
-                Where <span className="text-gradient">Heritage</span> Meets <span className="text-gradient">Spicy Elegance</span>
-              </h1>
-              
-              <p style={{
-                fontSize: 'clamp(1rem, 2vw, 1.15rem)',
-                color: 'var(--text-muted)',
-                marginBottom: '35px',
-                fontWeight: '300'
-              }}>
-                Step into a premium culinary journey with Baba Misal. Savor the crisp textures of artisanal sprouts, roasted indigenous spice blends, and melted buttery Pav served in a high-end, contemporary ambiance.
-              </p>
-              
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px' }}>
-                <a href="#menu" className="btn btn-primary" onClick={(e) => {
-                  e.preventDefault();
-                  document.getElementById('menu')?.scrollIntoView({ behavior: 'smooth' });
-                }}>
-                  View Full Menu
-                </a>
-                <button onClick={() => navigate('/order')} className="btn btn-secondary">
-                  Order At Table (QR)
-                </button>
-              </div>
-            </div>
-
-            {/* Custom Premium Food Mockup (supports future 3D assets) */}
             <div style={{
-              position: 'relative',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center'
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: 'rgba(0, 0, 0, 0.75)',
+              border: '1px solid var(--secondary)',
+              padding: '8px 20px',
+              borderRadius: 'var(--radius-full)',
+              marginBottom: '25px',
+              fontSize: '0.85rem',
+              fontWeight: '700',
+              color: 'var(--secondary)',
+              boxShadow: '0 4px 10px rgba(0,0,0,0.5)',
+              backdropFilter: 'blur(5px)'
             }}>
-              {/* Spinning decorative gold background ring */}
-              <div style={{
-                position: 'absolute',
-                width: '100%',
-                maxWidth: '420px',
-                aspectRatio: '1',
-                border: '2px dashed rgba(212, 175, 55, 0.12)',
-                borderRadius: '50%',
-                animation: 'spinSlow 40s linear infinite',
-                pointerEvents: 'none'
-              }} />
-              
-              {/* Golden Outer Glow */}
-              <div style={{
-                position: 'absolute',
-                width: '80%',
-                maxWidth: '340px',
-                aspectRatio: '1',
-                borderRadius: '50%',
-                boxShadow: 'var(--gold-glow-strong)',
-                opacity: 0.35,
-                background: 'radial-gradient(circle, rgba(212, 175, 55, 0.2) 0%, transparent 70%)',
-                pointerEvents: 'none'
-              }} />
-
-              {/* Main Food Image with premium border frame */}
-              <div style={{
-                position: 'relative',
-                width: '85%',
-                maxWidth: '360px',
-                aspectRatio: '1',
-                borderRadius: '50%',
-                border: '4px solid rgba(212, 175, 55, 0.25)',
-                boxShadow: '0 20px 50px rgba(0,0,0,0.8)',
-                overflow: 'hidden',
-                transition: 'var(--transition)'
-              }} className="hero-img-container">
-                <img 
-                  src="https://images.unsplash.com/photo-1601050690597-df056fb4ce78?auto=format&fit=crop&q=80&w=600" 
-                  alt="Premium Baba Misal" 
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    transform: 'scale(1.05)',
-                    transition: 'transform 0.8s ease'
-                  }}
-                />
-                
-                {/* Floating Heat Gradient overlay */}
-                <div style={{
-                  position: 'absolute',
-                  inset: 0,
-                  background: 'linear-gradient(to top, rgba(15,15,15,0.7) 0%, transparent 50%)',
-                  pointerEvents: 'none'
-                }} />
-              </div>
-
-              {/* Floating review tag */}
-              <div className="glass-panel" style={{
-                position: 'absolute',
-                bottom: '10%',
-                left: '-5%',
-                padding: '12px 20px',
-                borderRadius: 'var(--radius-md)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                border: '1px solid rgba(212,175,55,0.2)',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-                maxWidth: '220px'
+              <Flame size={14} style={{ color: 'var(--secondary)' }} />
+              <span style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>The Pride of Maharashtra</span>
+            </div>
+            
+            <h1 style={{
+              fontSize: 'clamp(2.5rem, 5vw, 4.2rem)',
+              lineHeight: '1.15',
+              marginBottom: '20px',
+              fontFamily: 'var(--font-heading)',
+              color: '#FFFFFF',
+              textShadow: '0 4px 20px rgba(0,0,0,0.95), 0 2px 4px rgba(0,0,0,0.95)'
+            }}>
+              Where <span className="text-gradient">Heritage</span> Meets <span className="text-gradient">Spicy Elegance</span>
+            </h1>
+            
+            <p style={{
+              fontSize: 'clamp(1rem, 2vw, 1.2rem)',
+              color: '#FFFFFF',
+              marginBottom: '40px',
+              fontWeight: '400',
+              lineHeight: '1.6',
+              textShadow: '0 2px 12px rgba(0,0,0,0.95), 0 4px 24px rgba(0,0,0,0.95)'
+            }}>
+              Step into a premium culinary journey with Baba Misal. Savor the crisp textures of artisanal sprouts, roasted indigenous spice blends, and melted buttery Pav served in a high-end, contemporary ambiance.
+            </p>
+            
+            <div style={{ 
+              display: 'flex', 
+              flexWrap: 'wrap', 
+              gap: '15px', 
+              justifyContent: 'center',
+              background: 'rgba(0,0,0,0.2)',
+              padding: '10px',
+              borderRadius: 'var(--radius-full)',
+              backdropFilter: 'blur(3px)'
+            }}>
+              <a href="#menu" className="btn btn-primary" onClick={(e) => {
+                e.preventDefault();
+                document.getElementById('menu')?.scrollIntoView({ behavior: 'smooth' });
               }}>
-                <div style={{
-                  background: 'var(--primary)',
-                  borderRadius: '50%',
-                  width: '32px',
-                  height: '32px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#000000',
-                  fontWeight: 'bold'
-                }}>★</div>
-                <div>
-                  <h4 style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>4.9 Stars Rating</h4>
-                  <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Over 2000+ local reviews</p>
-                </div>
-              </div>
+                View Full Menu
+              </a>
+              <button onClick={() => navigate('/order')} className="btn btn-secondary" style={{ background: 'rgba(0,0,0,0.65)', border: '2px solid var(--primary)', color: 'var(--primary)' }}>
+                Order At Table (QR)
+              </button>
             </div>
           </div>
         </div>
