@@ -14,6 +14,11 @@ export default function Order({ dishes, onAddOrder, navigate }) {
   // Successful order states
   const [checkedOut, setCheckedOut] = useState(false);
   const [generatedToken, setGeneratedToken] = useState(null);
+  const [lastCreatedOrder, setLastCreatedOrder] = useState(null);
+
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [pdfSuccess, setPdfSuccess] = useState(false);
+  const [pdfError, setPdfError] = useState(null);
   
   // Dish details popup overlay state
   const [selectedDish, setSelectedDish] = useState(null);
@@ -106,6 +111,7 @@ export default function Order({ dishes, onAddOrder, navigate }) {
     // 3. Dispatch order
     const orderDetails = onAddOrder({ name, phone }, cartItems, totalAmount, 0, totalAmount, false);
     
+    setLastCreatedOrder(orderDetails);
     setGeneratedToken(orderDetails.token);
     setCheckedOut(true);
     setCart({});
@@ -118,7 +124,406 @@ export default function Order({ dishes, onAddOrder, navigate }) {
     setCart({});
     setCheckedOut(false);
     setGeneratedToken(null);
+    setLastCreatedOrder(null);
     setErrors({});
+    setPdfSuccess(false);
+    setPdfError(null);
+  };
+
+  const loadJsPDF = () => {
+    return new Promise((resolve, reject) => {
+      console.log("[PDF DEBUG] Checking jsPDF library presence on window...");
+      if (window.jspdf) {
+        console.log("[PDF DEBUG] jsPDF found on window.jspdf");
+        resolve(window.jspdf);
+        return;
+      }
+      if (window.jsPDF) {
+        console.log("[PDF DEBUG] jsPDF found on window.jsPDF");
+        resolve({ jsPDF: window.jsPDF });
+        return;
+      }
+      console.log("[PDF DEBUG] Loading jsPDF from CDN dynamically...");
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+      script.async = true;
+      script.onload = () => {
+        console.log("[PDF DEBUG] CDN script onload completed. window.jspdf:", window.jspdf, "window.jsPDF:", window.jsPDF);
+        resolve(window.jspdf || { jsPDF: window.jsPDF });
+      };
+      script.onerror = (err) => {
+        console.error("[PDF DEBUG] CDN script loading failed:", err);
+        reject(err);
+      };
+      document.body.appendChild(script);
+    });
+  };
+
+  const getBase64ImageFromUrl = (url) => {
+    return new Promise((resolve, reject) => {
+      console.log("[PDF DEBUG] Attempting to convert asset to base64 canvas:", url);
+      const img = new Image();
+      img.setAttribute('crossOrigin', 'anonymous');
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth || img.width;
+          canvas.height = img.naturalHeight || img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          const dataURL = canvas.toDataURL('image/png');
+          console.log("[PDF DEBUG] Base64 image conversion successful.");
+          resolve(dataURL);
+        } catch (e) {
+          console.error("[PDF DEBUG] Canvas draw/base64 conversion threw exception:", e);
+          reject(e);
+        }
+      };
+      img.onerror = (err) => {
+        console.warn("[PDF DEBUG] Image onload failed to fire for asset:", err);
+        reject(err);
+      };
+      img.src = url;
+    });
+  };
+
+  const loadFonts = async (doc) => {
+    try {
+      console.log("[PDF DEBUG] Fetching Roboto regular and bold TTFs from cdnjs...");
+      const [regRes, boldRes] = await Promise.all([
+        fetch('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf'),
+        fetch('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Bold.ttf')
+      ]);
+
+      console.log("[PDF DEBUG] Fetch completed. Verifying response statuses...");
+      if (!regRes.ok || !boldRes.ok) {
+        throw new Error(`Font server returned invalid status code: Regular(${regRes.status}), Bold(${boldRes.status})`);
+      }
+
+      console.log("[PDF DEBUG] Font resources verified ok. Extracting binary content blobs...");
+      const [regBlob, boldBlob] = await Promise.all([regRes.blob(), boldRes.blob()]);
+
+      console.log("[PDF DEBUG] Converting regular font binary to base64...");
+      const regBase64 = await new Promise((resolve) => {
+        const r = new FileReader();
+        r.onloadend = () => resolve(r.result.split(',')[1]);
+        r.readAsDataURL(regBlob);
+      });
+
+      console.log("[PDF DEBUG] Converting bold font binary to base64...");
+      const boldBase64 = await new Promise((resolve) => {
+        const r = new FileReader();
+        r.onloadend = () => resolve(r.result.split(',')[1]);
+        r.readAsDataURL(boldBlob);
+      });
+
+      console.log("[PDF DEBUG] Adding fonts to virtual file system...");
+      doc.addFileToVFS('Roboto-Regular.ttf', regBase64);
+      doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+
+      doc.addFileToVFS('Roboto-Bold.ttf', boldBase64);
+      doc.addFont('Roboto-Bold.ttf', 'Roboto', 'bold');
+
+      console.log("[PDF DEBUG] Roboto fonts injected successfully.");
+      return true;
+    } catch (err) {
+      console.error("[PDF DEBUG] Font loader failed, reverting to Helvetica standard:", err);
+      return false;
+    }
+  };
+
+  const drawVectorLogo = (doc, x, y) => {
+    console.log("[PDF DEBUG] Drawing vector logo fallback emblem...");
+    try {
+      if (doc.saveGraphicsState && typeof doc.saveGraphicsState === 'function') {
+        doc.saveGraphicsState();
+      }
+    } catch (e) {
+      console.warn("[PDF DEBUG] saveGraphicsState is not supported in this jsPDF build.");
+    }
+
+    doc.setDrawColor(212, 175, 55);
+    doc.setFillColor(15, 15, 15);
+    doc.setLineWidth(0.6);
+    doc.circle(x, y, 9, 'FD');
+    doc.setLineWidth(0.2);
+    doc.circle(x, y, 7.5, 'S');
+    doc.setTextColor(212, 175, 55);
+    doc.setFontSize(9);
+    doc.text('BM', x, y + 3, { align: 'center' });
+
+    try {
+      if (doc.restoreGraphicsState && typeof doc.restoreGraphicsState === 'function') {
+        doc.restoreGraphicsState();
+      }
+    } catch (e) {
+      console.warn("[PDF DEBUG] restoreGraphicsState is not supported in this jsPDF build.");
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    console.log("[PDF DEBUG] Triggered handleDownloadPDF.");
+    if (!lastCreatedOrder) {
+      console.error("[PDF DEBUG] lastCreatedOrder state is empty! Aborting ticket download.");
+      return;
+    }
+    console.log("[PDF DEBUG] Target Order Object:", lastCreatedOrder);
+    console.log("[PDF DEBUG] Ticket Number:", lastCreatedOrder.token);
+    console.log("[PDF DEBUG] Guest Name:", lastCreatedOrder.customerName);
+    console.log("[PDF DEBUG] Guest Mobile:", lastCreatedOrder.customerPhone);
+
+    setPdfLoading(true);
+    setPdfError(null);
+    setPdfSuccess(false);
+
+    try {
+      const jspdfModule = await loadJsPDF();
+      console.log("[PDF DEBUG] Resolving jsPDF constructor function...");
+      
+      let jsPDFConstructor = null;
+      if (typeof window.jsPDF === 'function') {
+        jsPDFConstructor = window.jsPDF;
+        console.log("[PDF DEBUG] Resolved class constructor from window.jsPDF");
+      } else if (jspdfModule && typeof jspdfModule.jsPDF === 'function') {
+        jsPDFConstructor = jspdfModule.jsPDF;
+        console.log("[PDF DEBUG] Resolved class constructor from jspdfModule.jsPDF");
+      } else if (typeof jspdfModule === 'function') {
+        jsPDFConstructor = jspdfModule;
+        console.log("[PDF DEBUG] Resolved class constructor from jspdfModule direct function");
+      }
+
+      if (!jsPDFConstructor) {
+        throw new Error("jsPDF constructor class is missing! Check CDN script loading.");
+      }
+
+      console.log("[PDF DEBUG] Instantiating jsPDF document class...");
+      const doc = new jsPDFConstructor({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      console.log("[PDF DEBUG] jsPDF document successfully instantiated.");
+
+      let useFont = 'helvetica';
+      let currencySymbol = 'Rs. ';
+      
+      const fontsLoaded = await loadFonts(doc);
+      if (fontsLoaded) {
+        useFont = 'Roboto';
+        currencySymbol = '₹';
+      }
+
+      console.log("[PDF DEBUG] PDF Typography settings: FontFamily=" + useFont + ", CurrencySymbol=" + currencySymbol);
+
+      // Draw premium black background
+      doc.setFillColor(10, 10, 10);
+      doc.rect(0, 0, 210, 297, 'F');
+
+      // Draw luxury double gold borders
+      doc.setDrawColor(212, 175, 55);
+      doc.setLineWidth(0.8);
+      doc.rect(4, 4, 202, 289, 'S');
+
+      doc.setLineWidth(0.25);
+      doc.rect(5.5, 5.5, 199, 286, 'S');
+
+      const centerX = 105;
+
+      // Centered Logo
+      try {
+        console.log("[PDF DEBUG] Fetching logo favicon path...");
+        const logoBase64 = await getBase64ImageFromUrl('/favicon.ico');
+        console.log("[PDF DEBUG] Rendering favicon PNG image data to document...");
+        doc.addImage(logoBase64, 'PNG', centerX - 8, 14, 16, 16);
+      } catch (err) {
+        console.warn("[PDF DEBUG] Favicon loading failed. Drawing fallback gold seal emblem:", err);
+        drawVectorLogo(doc, centerX, 22);
+      }
+
+      // Restaurant Branding
+      doc.setTextColor(212, 175, 55);
+      doc.setFont(useFont, 'bold');
+      doc.setFontSize(22);
+      doc.text('BABA MISAL', centerX, 41, { align: 'center' });
+
+      doc.setTextColor(184, 184, 184);
+      doc.setFont(useFont, 'normal');
+      doc.setFontSize(9);
+      doc.text('TRADITIONAL GOLD STANDARD', centerX, 46, { align: 'center' });
+
+      // Centered Divider Line with Gold Diamond details
+      doc.setDrawColor(212, 175, 55);
+      doc.setLineWidth(0.4);
+      doc.line(20, 52, 190, 52);
+      
+      // Draw premium centered circle dot (100% compatible shape)
+      doc.setFillColor(212, 175, 55);
+      doc.circle(centerX, 52, 1.2, 'F');
+
+      // Receipt Information
+      const order = lastCreatedOrder;
+      const items = order.items || [];
+      
+      const dateObj = new Date(order.date);
+      const formattedDate = dateObj.toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
+      const formattedTime = dateObj.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+
+      // Token Number Card on the right side
+      doc.setFillColor(20, 20, 20);
+      doc.setDrawColor(212, 175, 55);
+      doc.setLineWidth(0.3);
+      doc.rect(130, 60, 60, 22, 'FD');
+
+      doc.setTextColor(184, 184, 184);
+      doc.setFont(useFont, 'bold');
+      doc.setFontSize(8);
+      doc.text('TICKET TOKEN', 160, 66, { align: 'center' });
+
+      doc.setTextColor(212, 175, 55);
+      doc.setFont(useFont, 'bold');
+      doc.setFontSize(20);
+      doc.text(`#${order.token}`, 160, 76, { align: 'center' });
+
+      // Metadata info on the left side
+      doc.setTextColor(212, 175, 55);
+      doc.setFont(useFont, 'bold');
+      doc.setFontSize(9);
+      doc.text('RECEIPT INFORMATION', 20, 64);
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFont(useFont, 'normal');
+      doc.setFontSize(8.5);
+      doc.text(`Date: ${formattedDate}`, 20, 70);
+      doc.text(`Time: ${formattedTime}`, 20, 75);
+      
+      const orderStatus = order.status ? order.status.toUpperCase() : 'PREPARING';
+      doc.text('Status: ', 20, 80);
+      doc.setTextColor(212, 175, 55);
+      doc.setFont(useFont, 'bold');
+      doc.text(orderStatus, 31, 80);
+
+      // Customer Information Section
+      doc.setFillColor(20, 20, 20);
+      doc.rect(20, 88, 170, 15, 'F');
+      
+      doc.setDrawColor(40, 40, 40);
+      doc.setLineWidth(0.2);
+      doc.rect(20, 88, 170, 15, 'S');
+
+      doc.setTextColor(212, 175, 55);
+      doc.setFont(useFont, 'bold');
+      doc.setFontSize(8.5);
+      doc.text('GUEST:', 24, 97.5);
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFont(useFont, 'normal');
+      doc.text(order.customerName.toUpperCase(), 37, 97.5);
+
+      doc.setTextColor(212, 175, 55);
+      doc.setFont(useFont, 'bold');
+      doc.text('MOBILE PHONE:', 122, 97.5);
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFont(useFont, 'normal');
+      doc.text(order.customerPhone, 149, 97.5);
+
+      // Ordered Items Table Section
+      doc.setTextColor(212, 175, 55);
+      doc.setFont(useFont, 'bold');
+      doc.setFontSize(9);
+      doc.text('ITEM DESCRIPTION', 20, 113);
+      doc.text('QTY', 115, 113, { align: 'center' });
+      doc.text('UNIT PRICE', 150, 113, { align: 'right' });
+      doc.text('TOTAL', 190, 113, { align: 'right' });
+
+      // Solid Table Header Line
+      doc.setDrawColor(212, 175, 55);
+      doc.setLineWidth(0.4);
+      doc.line(20, 116, 190, 116);
+
+      // Table Rows
+      let currentY = 123;
+      doc.setFont(useFont, 'normal');
+      doc.setFontSize(8.5);
+      
+      items.forEach((item) => {
+        doc.setTextColor(255, 255, 255);
+        doc.text(item.name, 20, currentY);
+        doc.text(item.quantity.toString(), 115, currentY, { align: 'center' });
+        doc.text(`${currencySymbol}${item.price}`, 150, currentY, { align: 'right' });
+        
+        doc.setTextColor(212, 175, 55);
+        doc.setFont(useFont, 'bold');
+        doc.text(`${currencySymbol}${item.subtotal || item.price * item.quantity}`, 190, currentY, { align: 'right' });
+        doc.setFont(useFont, 'normal');
+
+        // Row Separator Line
+        doc.setDrawColor(40, 40, 40);
+        doc.setLineWidth(0.15);
+        doc.line(20, currentY + 3, 190, currentY + 3);
+
+        currentY += 8;
+      });
+
+      // Billing Calculations Summary
+      const totalVal = order.finalTotal;
+      const subtotalVal = Math.round((totalVal / 1.05) * 100) / 100;
+      const gstVal = Math.round((totalVal - subtotalVal) * 100) / 100;
+
+      // Summary Divider Line
+      doc.setDrawColor(212, 175, 55);
+      doc.setLineWidth(0.3);
+      doc.line(110, currentY + 1, 190, currentY + 1);
+
+      doc.setTextColor(184, 184, 184);
+      doc.setFont(useFont, 'normal');
+      doc.setFontSize(8.5);
+      doc.text('Subtotal (Excl. Tax)', 110, currentY + 7);
+      doc.text(`${currencySymbol}${subtotalVal}`, 190, currentY + 7, { align: 'right' });
+
+      doc.text('GST (5% Included)', 110, currentY + 13);
+      doc.text(`${currencySymbol}${gstVal}`, 190, currentY + 13, { align: 'right' });
+
+      // Highlighted Grand Total Box Card
+      doc.setFillColor(212, 175, 55);
+      doc.rect(110, currentY + 17, 80, 11, 'F');
+
+      doc.setTextColor(0, 0, 0);
+      doc.setFont(useFont, 'bold');
+      doc.setFontSize(10);
+      doc.text('GRAND TOTAL', 114, currentY + 24.5);
+      doc.text(`${currencySymbol}${order.finalTotal}`, 186, currentY + 24.5, { align: 'right' });
+
+      // Footer Section
+      const footerY = Math.max(265, currentY + 50);
+
+      // Gold Footer Divider
+      doc.setDrawColor(212, 175, 55);
+      doc.setLineWidth(0.4);
+      doc.line(20, footerY - 5, 190, footerY - 5);
+
+      // Thank You Messages
+      doc.setTextColor(184, 184, 184);
+      doc.setFont(useFont, 'italic');
+      doc.setFontSize(8.5);
+      doc.text('Thank you for dining with us!', centerX, footerY, { align: 'center' });
+      doc.text('Savor the spice, honor the heritage.', centerX, footerY + 5, { align: 'center' });
+
+      doc.setFont(useFont, 'normal');
+      doc.setFontSize(7.5);
+      doc.text('BABA MISAL PREMIUM RESTAURANT SYSTEMS', centerX, footerY + 12, { align: 'center' });
+
+      console.log("[PDF DEBUG] Saving PDF document to browser cache...");
+      doc.save(`BabaMisal_Ticket_${order.token}.pdf`);
+      console.log("[PDF DEBUG] Save transaction success.");
+      setPdfSuccess(true);
+      setTimeout(() => setPdfSuccess(false), 4000);
+    } catch (err) {
+      console.error("[PDF DEBUG] Final caught exception during PDF generation flow:", err);
+      setPdfError("Failed to generate PDF. Please try again.");
+    } finally {
+      setPdfLoading(false);
+    }
   };
 
   // Filtered dishes for ordering catalog
@@ -226,11 +631,33 @@ export default function Order({ dishes, onAddOrder, navigate }) {
             </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <button onClick={() => navigate('/')} className="btn btn-primary" style={{ width: '100%' }}>
+          {pdfError && (
+            <p style={{ color: '#f44336', fontSize: '0.85rem', marginTop: '10px', marginBottom: '10px', textAlign: 'center' }}>
+              {pdfError}
+            </p>
+          )}
+
+          <div className="success-buttons-container">
+            <button 
+              onClick={handleDownloadPDF} 
+              className="btn btn-primary btn-download-pdf" 
+              style={{ width: '100%' }}
+              disabled={pdfLoading}
+            >
+              {pdfLoading ? 'Generating PDF...' : pdfSuccess ? 'Ticket Downloaded! ✓' : 'Download PDF Ticket'}
+            </button>
+            <button 
+              onClick={() => navigate('/')} 
+              className="btn btn-secondary btn-back-home" 
+              style={{ width: '100%' }}
+            >
               Back to Home
             </button>
-            <button onClick={handleReset} className="btn btn-secondary" style={{ width: '100%' }}>
+            <button 
+              onClick={handleReset} 
+              className="btn btn-secondary btn-new-order" 
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+            >
               <RotateCcw size={16} /> Place New Order
             </button>
           </div>

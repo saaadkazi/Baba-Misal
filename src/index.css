@@ -588,6 +588,148 @@ html, body {
     padding: 10px 20px !important;
     font-size: 0.82rem !important;
   }
+
+  /* Success Page Buttons mobile stacking and ordering */
+  .success-buttons-container {
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 12px !important;
+  }
+  
+  .success-buttons-container .btn {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+  
+  .success-buttons-container .btn-download-pdf {
+    order: 1 !important;
+  }
+
+  .success-buttons-container .btn-back-home {
+    order: 2 !important;
+  }
+
+  .success-buttons-container .btn-new-order {
+    order: 3 !important;
+  }
+
+  /* Admin mobile responsiveness */
+  .admin-sidebar {
+    display: none !important;
+  }
+  
+  .admin-mobile-nav {
+    display: flex !important;
+  }
+  
+  .admin-parent {
+    flex-direction: column !important;
+    padding: 80px 0 40px 0 !important;
+  }
+  
+  .admin-content-area {
+    padding: 145px 16px 20px 16px !important; /* spacing below fixed dropdown navigation */
+    width: 100% !important;
+  }
+
+  .admin-section-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 16px !important;
+    margin-bottom: 25px !important;
+    text-align: left !important;
+  }
+
+  .admin-section-header h1 {
+    font-size: 1.6rem !important;
+    line-height: 1.25 !important;
+  }
+
+  .admin-section-header p {
+    font-size: 0.78rem !important;
+  }
+
+  .admin-section-header .btn {
+    font-size: 0.75rem !important;
+    padding: 10px 16px !important;
+    min-height: 40px !important;
+  }
+
+  .admin-content-area .luxury-card {
+    padding: 16px !important;
+  }
+
+  .admin-content-area .luxury-card h2 {
+    font-size: 1.5rem !important;
+  }
+
+  .admin-content-area .luxury-card span {
+    font-size: 0.72rem !important;
+  }
+
+  .admin-content-area .glass-panel {
+    padding: 16px !important;
+  }
+
+  .admin-content-area .glass-panel h3 {
+    font-size: 1.1rem !important;
+  }
+
+  .desktop-only-table {
+    display: none !important;
+  }
+
+  .mobile-only-cards-grid {
+    display: flex !important;
+  }
+
+  /* POS sub-tabs switching support */
+  .pos-mobile-toggle-strip {
+    display: flex !important;
+  }
+
+  .pos-catalog-column, .pos-invoice-column {
+    display: none !important;
+  }
+
+  .pos-catalog-column.mobile-active, .pos-invoice-column.mobile-active {
+    display: block !important;
+  }
+
+  .pos-guest-inputs {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+}
+
+/* ========================================================
+   ORDER SUCCESS SCREEN - DOWNLOAD PDF BUTTON SYSTEMS
+   ======================================================== */
+.success-buttons-container {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 15px !important;
+  margin-top: 25px !important;
+}
+
+.success-buttons-container .btn-download-pdf {
+  order: 2 !important;
+  flex: 1 !important;
+  max-width: 250px !important;
+}
+
+.success-buttons-container .btn-back-home {
+  order: 1 !important;
+  flex: 1 !important;
+  max-width: 200px !important;
+}
+
+.success-buttons-container .btn-new-order {
+  order: 3 !important;
+  flex: 1 !important;
+  max-width: 200px !important;
 }
 
 /* 4. Breakpoint for Standard Smartphones (max-width: 480px) */
@@ -678,5 +820,180 @@ html, body {
     font-size: 0.8rem !important;
   }
 }
+
+/* ========================================================
+   CASHIER POS TERMINAL SUCCESS MODAL SYSTEM & PRINTING
+   ======================================================== */
+
+/* Success Modal Backdrop */
+.pos-success-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+/* Success Modal Container */
+.pos-success-modal {
+  width: 100%;
+  max-width: 500px;
+  background: #111111;
+  border: 2px solid var(--primary);
+  border-radius: var(--radius-lg);
+  padding: 35px 25px;
+  box-shadow: var(--gold-glow-strong);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  animation: posModalZoom 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes posModalZoom {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.pos-success-modal::before {
+  content: '';
+  position: absolute;
+  top: -100px;
+  left: -100px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(var(--primary-rgb), 0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Modal Actions Stack */
+.pos-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.pos-modal-actions .btn {
+  width: 100%;
+  min-height: 48px; /* High-end touch target */
+}
+
+/* Responsive Overrides for Tablet and Desktop */
+@media (min-width: 768px) {
+  .pos-modal-actions {
+    flex-direction: row;
+    justify-content: center;
+    gap: 15px;
+  }
+  .pos-modal-actions .btn {
+    flex: 1;
+  }
+}
+
+/* Reset Animation */
+.pos-resetting-active {
+  animation: posResetFlash 0.8s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+}
+
+@keyframes posResetFlash {
+  0% {
+    opacity: 0.3;
+    transform: scale(0.99);
+    filter: brightness(1.5) blur(1px);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.005);
+    filter: brightness(1.2);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: none;
+  }
+}
+
+/* Print Receipt Styles (Only visible during print) */
+.print-receipt-container {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+@media print {
+  /* Hide all root application markup */
+  #root, .admin-parent, .pos-success-modal-overlay {
+    display: none !important;
+  }
+
+  /* Expose receipt container & receipt */
+  .print-receipt-container {
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+
+  .print-receipt-only {
+    display: block !important;
+    position: static !important;
+    width: 76mm !important; /* Optimal for 80mm thermal receipt roll */
+    margin: 0 auto !important;
+    padding: 10px 5px !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-family: 'Courier New', Courier, monospace !important;
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+    box-sizing: border-box !important;
+  }
+
+  .print-receipt-only table {
+    display: table !important;
+    width: 100% !important;
+    border-collapse: collapse !important;
+    color: #000000 !important;
+  }
+
+  .print-receipt-only thead {
+    display: table-header-group !important;
+  }
+
+  .print-receipt-only tbody {
+    display: table-row-group !important;
+  }
+
+  .print-receipt-only tr {
+    display: table-row !important;
+  }
+
+  .print-receipt-only th, .print-receipt-only td {
+    display: table-cell !important;
+    color: #000000 !important;
+    font-family: 'Courier New', Courier, monospace !important;
+  }
+  
+  /* Prevent any black backgrounds or gold gradients from showing on paper */
+  * {
+    background: transparent !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+}
+
 
 

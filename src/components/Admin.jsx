@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Lock, LayoutDashboard, Utensils, ReceiptText, LogOut, 
   TrendingUp, ShoppingBag, Plus, Edit2, Trash2, Search, 
@@ -239,6 +240,172 @@ export default function Admin({
   const [billingSearch, setBillingSearch] = useState('');
   const [billingActiveCat, setBillingActiveCat] = useState('All');
   const [billingSuccessDetails, setBillingSuccessDetails] = useState(null);
+  const [posLoading, setPosLoading] = useState(false);
+  const [posResetting, setPosResetting] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [pdfSuccess, setPdfSuccess] = useState(false);
+  const [pdfError, setPdfError] = useState(null);
+  const [showPOSModal, setShowPOSModal] = useState(false);
+
+  const loadJsPDF = () => {
+    return new Promise((resolve, reject) => {
+      console.log("[POS PDF DEBUG] Checking jsPDF library presence on window...");
+      if (window.jspdf) {
+        console.log("[POS PDF DEBUG] jsPDF found on window.jspdf");
+        resolve(window.jspdf);
+        return;
+      }
+      if (window.jsPDF) {
+        console.log("[POS PDF DEBUG] jsPDF found on window.jsPDF");
+        resolve({ jsPDF: window.jsPDF });
+        return;
+      }
+      console.log("[POS PDF DEBUG] Loading jsPDF from CDN dynamically...");
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+      script.async = true;
+      script.onload = () => {
+        console.log("[POS PDF DEBUG] CDN script onload completed.");
+        resolve(window.jspdf || { jsPDF: window.jsPDF });
+      };
+      script.onerror = (err) => {
+        console.error("[POS PDF DEBUG] CDN script loading failed:", err);
+        reject(err);
+      };
+      document.body.appendChild(script);
+    });
+  };
+
+  const loadHtml2Canvas = () => {
+    return new Promise((resolve, reject) => {
+      console.log("[POS PDF DEBUG] Checking html2canvas presence on window...");
+      if (window.html2canvas) {
+        console.log("[POS PDF DEBUG] html2canvas found on window.html2canvas");
+        resolve(window.html2canvas);
+        return;
+      }
+      console.log("[POS PDF DEBUG] Loading html2canvas from CDN dynamically...");
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+      script.async = true;
+      script.onload = () => {
+        console.log("[POS PDF DEBUG] html2canvas CDN script onload completed.");
+        resolve(window.html2canvas);
+      };
+      script.onerror = (err) => {
+        console.error("[POS PDF DEBUG] html2canvas CDN script loading failed:", err);
+        reject(err);
+      };
+      document.body.appendChild(script);
+    });
+  };
+
+  const handlePOSDownloadPDF = async () => {
+    if (!billingSuccessDetails) return;
+    
+    // Confirm receipt exists in DOM and contains data
+    const element = document.querySelector('.print-receipt-only');
+    if (!element) {
+      alert("Error: Receipt template not found in the DOM.");
+      return;
+    }
+    if (!element.innerHTML || element.innerHTML.trim() === "") {
+      alert("Error: Receipt template is empty in the DOM.");
+      return;
+    }
+
+    setPdfLoading(true);
+    setPdfError(null);
+    setPdfSuccess(false);
+
+    try {
+      const [jspdfModule, html2canvasModule] = await Promise.all([
+        loadJsPDF(),
+        loadHtml2Canvas()
+      ]);
+
+      let jsPDFConstructor = null;
+      if (typeof window.jsPDF === 'function') {
+        jsPDFConstructor = window.jsPDF;
+      } else if (jspdfModule && typeof jspdfModule.jsPDF === 'function') {
+        jsPDFConstructor = jspdfModule.jsPDF;
+      } else if (typeof jspdfModule === 'function') {
+        jsPDFConstructor = jspdfModule;
+      }
+
+      const html2canvas = window.html2canvas || html2canvasModule;
+
+      if (!jsPDFConstructor || !html2canvas) {
+        throw new Error("jsPDF or html2canvas libraries failed to load.");
+      }
+
+      // Small delay for layout engine to make sure everything is settled
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      const canvas = await html2canvas(element, {
+        scale: 2.5, // Ultra-sharp print resolution
+        useCORS: true,
+        backgroundColor: '#ffffff', // Clean white background for the receipt image
+        logging: false
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const doc = new jsPDFConstructor({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      // Premium Black Background
+      doc.setFillColor(10, 10, 10);
+      doc.rect(0, 0, 210, 297, 'F');
+
+      // Double Gold Borders
+      doc.setDrawColor(212, 175, 55);
+      doc.setLineWidth(0.8);
+      doc.rect(4, 4, 202, 289, 'S');
+
+      doc.setLineWidth(0.25);
+      doc.rect(5.5, 5.5, 199, 286, 'S');
+
+      // Center the receipt visually on A4 page
+      const imgWidth = 110; // width in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const x = (210 - imgWidth) / 2;
+      const y = Math.max(20, (297 - imgHeight) / 2);
+
+      doc.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
+
+      doc.save(`BabaMisal_Token_${billingSuccessDetails.token}.pdf`);
+      setPdfSuccess(true);
+      setTimeout(() => setPdfSuccess(false), 4000);
+    } catch (err) {
+      console.error("PDF generation exception:", err);
+      setPdfError("Failed to generate PDF. Please try again.");
+    } finally {
+      setPdfLoading(false);
+    }
+  };
+
+  const handlePOSPrint = () => {
+    window.print();
+  };
+
+  const handleNewBill = () => {
+    setShowPOSModal(false);
+    setPosResetting(true);
+    setBillingCart({});
+    setBillingDiscount('');
+    setBillingCustomerName('Walk-In Guest');
+    setBillingCustomerPhone('9999999999');
+    setBillingSuccessDetails(null);
+    setPdfError(null);
+    setPdfSuccess(false);
+
+    setTimeout(() => {
+      setPosResetting(false);
+    }, 800);
+  };
 
   const billingFilteredDishes = useMemo(() => {
     return dishes.filter(d => {
@@ -287,25 +454,32 @@ export default function Admin({
       alert("Billing items list is empty. Add dishes to POS!");
       return;
     }
+    if (posLoading) return;
 
-    const orderObj = onAddOrder(
-      { name: billingCustomerName, phone: billingCustomerPhone },
-      activeBillingItems,
-      billingTotalAmount,
-      discountAmount,
-      billingFinalAmount,
-      true // Mark as POS Cashier Order
-    );
+    setPosLoading(true);
+    setPdfError(null);
+    setPdfSuccess(false);
 
-    setBillingSuccessDetails(orderObj);
-    setBillingCart({});
-    setBillingDiscount('');
-    setBillingCustomerName('Walk-In Guest');
-    setBillingCustomerPhone('9999999999');
-    
     setTimeout(() => {
-      setBillingSuccessDetails(null);
-    }, 6000);
+      try {
+        const orderObj = onAddOrder(
+          { name: billingCustomerName, phone: billingCustomerPhone },
+          activeBillingItems,
+          billingTotalAmount,
+          discountAmount,
+          billingFinalAmount,
+          true // Mark as POS Cashier Order
+        );
+
+        setBillingSuccessDetails(orderObj);
+        setShowPOSModal(true);
+      } catch (err) {
+        console.error("POS order generation error:", err);
+        alert("Failed to submit bill. Please try again.");
+      } finally {
+        setPosLoading(false);
+      }
+    }, 800);
   };
 
   // ================= DASHBOARD CORE MATH & SELECTORS =================
@@ -1273,26 +1447,186 @@ export default function Admin({
               <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Direct offline customer invoicing and instant token routing</p>
             </div>
 
-            {billingSuccessDetails && (
-              <div style={{
-                background: 'rgba(76, 175, 80, 0.15)',
-                border: '1px solid #4caf50',
-                color: '#4caf50',
-                padding: '16px',
-                borderRadius: 'var(--radius-md)',
-                marginBottom: '25px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between'
-              }}>
-                <div>
-                  <h4 style={{ fontWeight: 'bold' }}>Bill Processed Successfully!</h4>
-                  <p style={{ fontSize: '0.8rem' }}>Order registered locally and kitchen token **Token #{billingSuccessDetails.token}** has been generated.</p>
-                </div>
-                <div style={{ fontSize: '1.8rem', fontWeight: '800', background: 'rgba(76,175,80,0.1)', padding: '4px 14px', borderRadius: '6px' }}>
-                  #{billingSuccessDetails.token}
+            {showPOSModal && billingSuccessDetails && (
+              <div className="pos-success-modal-overlay">
+                <div className="pos-success-modal">
+                  <div style={{
+                    width: '70px',
+                    height: '70px',
+                    borderRadius: '50%',
+                    background: 'rgba(212, 175, 55, 0.1)',
+                    border: '2px solid var(--primary)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 20px auto',
+                    color: 'var(--primary)',
+                    animation: 'pulseGold 2s infinite'
+                  }}>
+                    <Check size={36} />
+                  </div>
+
+                  <span style={{ 
+                    fontSize: '0.75rem', 
+                    letterSpacing: '0.2em', 
+                    textTransform: 'uppercase', 
+                    color: 'var(--secondary)', 
+                    fontWeight: 'bold', 
+                    display: 'block', 
+                    marginBottom: '6px' 
+                  }}>
+                    ✓ TOKEN GENERATED
+                  </span>
+                  
+                  <h2 style={{ 
+                    fontFamily: 'var(--font-heading)', 
+                    fontSize: '2.5rem', 
+                    color: 'var(--primary)',
+                    fontWeight: '800',
+                    margin: '10px 0 25px 0'
+                  }}>
+                    TOKEN #{billingSuccessDetails.token}
+                  </h2>
+
+                  <p style={{ 
+                    color: 'var(--text-muted)', 
+                    fontSize: '0.85rem', 
+                    lineHeight: '1.6',
+                    marginBottom: '30px',
+                    padding: '0 10px'
+                  }}>
+                    POS bill registered successfully. Savor the spice, honor the heritage.
+                  </p>
+
+                  {pdfError && (
+                    <p style={{ color: '#f44336', fontSize: '0.8rem', marginBottom: '15px' }}>
+                      {pdfError}
+                    </p>
+                  )}
+
+                  <div className="pos-modal-actions">
+                    <button 
+                      onClick={handlePOSPrint} 
+                      className="btn btn-secondary"
+                      style={{ height: '48px' }}
+                    >
+                      Print Receipt
+                    </button>
+                    <button 
+                      onClick={handlePOSDownloadPDF} 
+                      className="btn btn-primary" 
+                      style={{ height: '48px' }}
+                      disabled={pdfLoading}
+                    >
+                      {pdfLoading ? 'Downloading...' : pdfSuccess ? 'Downloaded! ✓' : 'Download PDF'}
+                    </button>
+                    <button 
+                      onClick={handleNewBill} 
+                      className="btn btn-secondary"
+                      style={{ 
+                        height: '48px',
+                        borderColor: 'var(--secondary)',
+                        color: 'var(--secondary)',
+                        background: 'rgba(255, 107, 0, 0.05)'
+                      }}
+                    >
+                      New Bill
+                    </button>
+                  </div>
                 </div>
               </div>
+            )}
+
+            {billingSuccessDetails && createPortal(
+              <div className="print-receipt-container" style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}>
+                <div className="print-receipt-only" style={{ background: '#ffffff', color: '#000000', padding: '20px', width: '350px', boxSizing: 'border-box', fontFamily: "'Courier New', Courier, monospace" }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '15px' }}>
+                    <img 
+                      src="/favicon.ico" 
+                      alt="Baba Misal Logo" 
+                      style={{
+                        width: '45px',
+                        height: '45px',
+                        objectFit: 'cover',
+                        borderRadius: '50%',
+                        marginBottom: '8px'
+                      }}
+                    />
+                    <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold', letterSpacing: '1px', color: '#000000' }}>BABA MISAL</h2>
+                    <p style={{ margin: '2px 0 5px 0', fontSize: '10px', textTransform: 'uppercase', color: '#000000' }}>Traditional Gold Standard</p>
+                    <p style={{ margin: 0, fontSize: '11px', color: '#000000' }}>Counter POS Terminal</p>
+                  </div>
+                  
+                  <div style={{ borderTop: '1px dashed #000', borderBottom: '1px dashed #000', padding: '8px 0', marginBottom: '15px', color: '#000000' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span><strong>TOKEN NO:</strong></span>
+                      <span><strong>#{billingSuccessDetails.token}</strong></span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginTop: '4px' }}>
+                      <span>Date: {new Date(billingSuccessDetails.date).toLocaleDateString('en-IN')}</span>
+                      <span>Time: {new Date(billingSuccessDetails.date).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginTop: '4px' }}>
+                      <span>Cashier: Super Admin</span>
+                      <span>Status: {billingSuccessDetails.status || 'Pending'}</span>
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '15px', fontSize: '11px', color: '#000000', textAlign: 'left' }}>
+                    <strong>Customer Details:</strong><br />
+                    Name: {billingSuccessDetails.customerName}<br />
+                    Phone: {billingSuccessDetails.customerPhone}
+                  </div>
+
+                  <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px', fontSize: '11px', color: '#000000' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px dashed #000' }}>
+                        <th style={{ textAlign: 'left', padding: '4px 0', color: '#000000' }}>Item</th>
+                        <th style={{ textAlign: 'center', padding: '4px 0', width: '40px', color: '#000000' }}>Qty</th>
+                        <th style={{ textAlign: 'right', padding: '4px 0', width: '60px', color: '#000000' }}>Price</th>
+                        <th style={{ textAlign: 'right', padding: '4px 0', width: '70px', color: '#000000' }}>Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {billingSuccessDetails.items.map((item, idx) => (
+                        <tr key={idx}>
+                          <td style={{ padding: '4px 0', verticalAlign: 'top', color: '#000000' }}>{item.name}</td>
+                          <td style={{ padding: '4px 0', textAlign: 'center', verticalAlign: 'top', color: '#000000' }}>{item.quantity}</td>
+                          <td style={{ padding: '4px 0', textAlign: 'right', verticalAlign: 'top', color: '#000000' }}>₹{item.price}</td>
+                          <td style={{ padding: '4px 0', textAlign: 'right', verticalAlign: 'top', color: '#000000' }}>₹{item.price * item.quantity}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+
+                  <div style={{ borderTop: '1px dashed #000', paddingTop: '8px', fontSize: '11px', color: '#000000' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span>Subtotal:</span>
+                      <span>₹{billingSuccessDetails.total}</span>
+                    </div>
+                    {billingSuccessDetails.discount > 0 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                        <span>Discount:</span>
+                        <span>- ₹{billingSuccessDetails.discount}</span>
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span>GST (5% Included):</span>
+                      <span>₹{Math.round((billingSuccessDetails.finalTotal - (billingSuccessDetails.finalTotal / 1.05)) * 100) / 100}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: 'bold', borderTop: '1px dashed #000', paddingTop: '6px', marginTop: '6px', color: '#000000' }}>
+                      <span>GRAND TOTAL:</span>
+                      <span>₹{billingSuccessDetails.finalTotal}</span>
+                    </div>
+                  </div>
+
+                  <div style={{ textAlign: 'center', marginTop: '25px', fontSize: '10px', borderTop: '1px dashed #000', paddingTop: '10px', color: '#000000' }}>
+                    <p style={{ margin: 0 }}>Thank you for dining with us!</p>
+                    <p style={{ margin: '2px 0 0 0' }}>Savor the spice, honor the heritage.</p>
+                  </div>
+                </div>
+              </div>,
+              document.body
             )}
 
             {/* POS Mobile view sub-tabs switcher */}
@@ -1364,7 +1698,7 @@ export default function Admin({
             }}>
               
               {/* POS LEFT COLUMN: Quick Search Dish Catalog */}
-              <div className={`glass-panel pos-catalog-column ${posMobileTab === 'catalog' ? 'mobile-active' : 'mobile-inactive'}`} style={{ padding: '20px', border: '1px solid rgba(212,175,55,0.15)' }}>
+              <div className={`glass-panel pos-catalog-column ${posMobileTab === 'catalog' ? 'mobile-active' : 'mobile-inactive'} ${posResetting ? 'pos-resetting-active' : ''}`} style={{ padding: '20px', border: '1px solid rgba(212,175,55,0.15)' }}>
                 <h3 style={{ fontSize: '1.15rem', fontFamily: 'var(--font-heading)', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '10px', marginBottom: '15px' }}>
                   POS Catalog Catalog Selector
                 </h3>
@@ -1463,7 +1797,7 @@ export default function Admin({
               </div>
 
               {/* POS RIGHT COLUMN: Bill Calculations Table */}
-              <div className={`glass-panel pos-invoice-column ${posMobileTab === 'invoice' ? 'mobile-active' : 'mobile-inactive'}`} style={{ padding: '24px', border: '1px solid rgba(212,175,55,0.15)' }}>
+              <div className={`glass-panel pos-invoice-column ${posMobileTab === 'invoice' ? 'mobile-active' : 'mobile-inactive'} ${posResetting ? 'pos-resetting-active' : ''}`} style={{ padding: '24px', border: '1px solid rgba(212,175,55,0.15)' }}>
                 <h3 style={{ fontSize: '1.2rem', fontFamily: 'var(--font-heading)', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '10px', marginBottom: '15px' }}>
                   Invoice Ledger Calculator
                 </h3>
@@ -1552,8 +1886,8 @@ export default function Admin({
                         </div>
                       </div>
 
-                      <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '25px' }}>
-                        Submit Bill & Cash Token
+                      <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '25px' }} disabled={posLoading}>
+                        {posLoading ? 'Generating Cash Token...' : 'Submit Bill & Cash Token'}
                       </button>
                     </div>
                   ) : (
