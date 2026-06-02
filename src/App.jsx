@@ -169,19 +169,18 @@ export default function App() {
             onClick={() => navigate('/')} 
             style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
           >
-            <div style={{
-              background: 'var(--gradient-gold-orange)',
-              borderRadius: '12px',
-              width: '40px',
-              height: '40px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#000000',
-              boxShadow: 'var(--orange-glow)'
-            }}>
-              <Flame size={20} fill="#000" />
-            </div>
+            <img 
+              src="/favicon.ico" 
+              alt="Baba Misal Logo" 
+              style={{
+                width: '40px',
+                height: '40px',
+                objectFit: 'cover',
+                borderRadius: '50%',
+                overflow: 'hidden',
+                boxShadow: 'var(--gold-glow)'
+              }}
+            />
             <div>
               <h1 style={{ 
                 fontFamily: 'var(--font-heading)', 
@@ -212,6 +211,20 @@ export default function App() {
               }}
             >
               Home
+            </span>
+
+            <span 
+              onClick={() => navigate('/order')} 
+              style={{ 
+                fontSize: '0.9rem', 
+                fontWeight: '600', 
+                cursor: 'pointer', 
+                color: route === '/order' ? 'var(--primary)' : 'var(--text-muted)',
+                transition: 'var(--transition)'
+              }}
+              className="nav-link-hover"
+            >
+              Order
             </span>
 
             {/* Anchors on Home Page */}
@@ -294,6 +307,13 @@ export default function App() {
           >
             Home
           </button>
+
+          <button 
+            onClick={() => navigate('/order')} 
+            style={{ fontSize: '1.2rem', textAlign: 'left', fontWeight: 'bold', color: route === '/order' ? 'var(--primary)' : 'var(--text)' }}
+          >
+            Order
+          </button>
           
           {navAnchors.map(anchor => (
             <button
@@ -347,7 +367,17 @@ export default function App() {
               {/* Brand Col */}
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
-                  <Flame size={22} style={{ color: 'var(--primary)' }} />
+                  <img 
+                    src="/favicon.ico" 
+                    alt="Baba Misal Logo" 
+                    style={{
+                      width: '30px',
+                      height: '30px',
+                      objectFit: 'cover',
+                      borderRadius: '50%',
+                      overflow: 'hidden'
+                    }}
+                  />
                   <h3 style={{ fontFamily: 'var(--font-heading)', color: 'var(--primary)', fontSize: '1.3rem' }}>
                     BABA MISAL
                   </h3>

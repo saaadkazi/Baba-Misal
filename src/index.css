@@ -397,3 +397,50 @@ button {
   background: linear-gradient(90deg, transparent, rgba(var(--primary-rgb), 0.2), transparent);
   margin: 40px 0;
 }
+
+/* ==========================================
+   PREMIUM CINEMATIC HERO EXTENSIONS
+   ========================================== */
+@keyframes luxuryShine {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.hero-heading-premium {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  background: linear-gradient(90deg, #FFD05B 0%, #FF8E00 50%, #FF5300 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: default;
+  display: inline-block;
+}
+
+.hero-heading-premium:hover {
+  transform: scale(1.03);
+}
+
+.hero-subheading-premium {
+  color: #FFFDF5; /* Brilliant warm white for maximum brightness */
+  line-height: 1.9;
+  font-weight: 600; /* Bolder weighting for high clarity and brightness */
+  text-shadow: 
+    0 2px 4px rgba(0, 0, 0, 1), 
+    0 4px 12px rgba(0, 0, 0, 1), 
+    0 0 20px rgba(var(--primary-rgb), 0.4); /* Subtle, high-end gold glow for brightness */
+  transition: all 0.5s ease;
+  cursor: default;
+}
+
+.hero-subheading-premium:hover {
+  color: #FFFFFF;
+  text-shadow: 
+    0 2px 4px rgba(0, 0, 0, 1), 
+    0 4px 15px rgba(0, 0, 0, 1), 
+    0 0 30px rgba(var(--primary-rgb), 0.7); /* Stronger glow on hover */
+}

@@ -105,14 +105,14 @@ export default function Home({ dishes, reviews, onAddReview, navigate }) {
             flexDirection: 'column',
             alignItems: 'center',
             textAlign: 'center',
-            maxWidth: '750px',
+            maxWidth: '850px',
             margin: '0 auto'
           }}>
             <div style={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: '8px',
-              background: 'rgba(0, 0, 0, 0.75)',
+              background: 'rgba(0, 0, 0, 0.8)',
               border: '1px solid var(--secondary)',
               padding: '8px 20px',
               borderRadius: 'var(--radius-full)',
@@ -127,26 +127,31 @@ export default function Home({ dishes, reviews, onAddReview, navigate }) {
               <span style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>The Pride of Maharashtra</span>
             </div>
             
-            <h1 style={{
-              fontSize: 'clamp(2.5rem, 5vw, 4.2rem)',
-              lineHeight: '1.15',
-              marginBottom: '20px',
-              fontFamily: 'var(--font-heading)',
-              color: '#FFFFFF',
-              textShadow: '0 4px 20px rgba(0,0,0,0.95), 0 2px 4px rgba(0,0,0,0.95)'
-            }}>
-              Where <span className="text-gradient">Heritage</span> Meets <span className="text-gradient">Spicy Elegance</span>
+            <h1 
+              style={{
+                fontSize: 'clamp(2.5rem, 5.5vw, 4.5rem)',
+                lineHeight: '1.25',
+                marginBottom: '25px',
+                textAlign: 'center',
+                fontFamily: 'var(--font-heading)',
+                fontWeight: 700,
+                color: '#FFFFFF',
+                textShadow: '0 4px 15px rgba(0,0,0,0.95), 0 0 10px rgba(212,175,55,0.1)'
+              }}
+            >
+              परंपरेचा मान, <span className="hero-heading-premium" style={{ display: 'inline-block' }}>तिखट चवीची शान</span>
             </h1>
             
-            <p style={{
-              fontSize: 'clamp(1rem, 2vw, 1.2rem)',
-              color: '#FFFFFF',
-              marginBottom: '40px',
-              fontWeight: '400',
-              lineHeight: '1.6',
-              textShadow: '0 2px 12px rgba(0,0,0,0.95), 0 4px 24px rgba(0,0,0,0.95)'
-            }}>
-              Step into a premium culinary journey with Baba Misal. Savor the crisp textures of artisanal sprouts, roasted indigenous spice blends, and melted buttery Pav served in a high-end, contemporary ambiance.
+            <p 
+              className="hero-subheading-premium"
+              style={{
+                fontSize: 'clamp(1rem, 2.2vw, 1.25rem)',
+                marginBottom: '40px',
+                textAlign: 'center',
+                maxWidth: '700px'
+              }}
+            >
+              अस्सल मिसळ, ताजे साहित्य आणि अविस्मरणीय चव यांचा अनोखा संगम. प्रत्येक घासात परंपरा, गुणवत्ता आणि महाराष्ट्राचा खरा स्वाद.
             </p>
             
             <div style={{ 
@@ -216,7 +221,7 @@ export default function Home({ dishes, reviews, onAddReview, navigate }) {
       </section>
 
       {/* ================= FEATURED DISHES ================= */}
-      <section style={{ padding: '100px 0', borderBottom: '1px solid rgba(212, 175, 55, 0.05)' }}>
+      <section id="featured" style={{ padding: '100px 0', borderBottom: '1px solid rgba(212, 175, 55, 0.05)' }}>
         <div className="container">
           <div className="section-header">
             <span className="section-subtitle">Exquisite Creations</span>
@@ -405,7 +410,7 @@ export default function Home({ dishes, reviews, onAddReview, navigate }) {
       </section>
 
       {/* ================= ABOUT US ================= */}
-      <section style={{ padding: '100px 0', borderBottom: '1px solid rgba(212, 175, 55, 0.05)' }}>
+      <section id="about" style={{ padding: '100px 0', borderBottom: '1px solid rgba(212, 175, 55, 0.05)' }}>
         <div className="container">
           <div style={{
             display: 'grid',
@@ -472,7 +477,7 @@ export default function Home({ dishes, reviews, onAddReview, navigate }) {
       </section>
 
       {/* ================= CUSTOMER REVIEWS ================= */}
-      <section style={{ padding: '100px 0', background: '#090909', borderBottom: '1px solid rgba(212, 175, 55, 0.05)' }}>
+      <section id="reviews" style={{ padding: '100px 0', background: '#090909', borderBottom: '1px solid rgba(212, 175, 55, 0.05)' }}>
         <div className="container">
           <div className="section-header">
             <span className="section-subtitle">Gastronome Feedback</span>
@@ -606,7 +611,7 @@ export default function Home({ dishes, reviews, onAddReview, navigate }) {
       </section>
 
       {/* ================= CONTACT US ================= */}
-      <section style={{ padding: '100px 0', borderBottom: '1px solid rgba(212, 175, 55, 0.05)' }}>
+      <section id="contact" style={{ padding: '100px 0', borderBottom: '1px solid rgba(212, 175, 55, 0.05)' }}>
         <div className="container">
           <div className="section-header">
             <span className="section-subtitle">Connect With Us</span>
@@ -726,6 +731,333 @@ export default function Home({ dishes, reviews, onAddReview, navigate }) {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* ================= VISIT US SECTION ================= */}
+      <section id="visit" style={{ 
+        padding: '100px 0', 
+        background: '#070707', 
+        borderBottom: '1px solid rgba(212, 175, 55, 0.15)',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        {/* Subtle background luxury glow */}
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '600px',
+          height: '600px',
+          background: 'radial-gradient(circle, rgba(212,175,55,0.03) 0%, transparent 70%)',
+          pointerEvents: 'none',
+          zIndex: 1
+        }} />
+
+        <div className="container" style={{ position: 'relative', zIndex: 2 }}>
+          <div className="section-header">
+            <span className="section-subtitle">Find Our Spot</span>
+            <h2 className="section-title">Visit Our Flagship Haven</h2>
+          </div>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gap: '50px',
+            alignItems: 'stretch'
+          }} className="visit-grid">
+            
+            {/* 1. Brand Information Card */}
+            <div className="luxury-card glass-panel" style={{
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              padding: '40px',
+              border: '1px solid rgba(212, 175, 55, 0.18)',
+              background: 'rgba(15, 15, 15, 0.9)',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.8), var(--gold-glow)'
+            }}>
+              <div>
+                {/* Header branding with logo */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '30px' }}>
+                  <div style={{
+                    width: '60px',
+                    height: '60px',
+                    borderRadius: '50%',
+                    border: '2px solid var(--primary)',
+                    padding: '3px',
+                    background: '#000',
+                    boxShadow: 'var(--gold-glow)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <img 
+                      src="/favicon.ico" 
+                      alt="Baba Misal Logo" 
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        borderRadius: '50%'
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <h3 style={{ 
+                      fontFamily: 'var(--font-heading)', 
+                      fontSize: '1.8rem', 
+                      color: 'var(--primary)', 
+                      lineHeight: '1.1',
+                      fontWeight: '700'
+                    }}>
+                      Baba Misal
+                    </h3>
+                    <span style={{ 
+                      fontSize: '0.75rem', 
+                      letterSpacing: '0.15em', 
+                      color: 'var(--text-muted)',
+                      textTransform: 'uppercase',
+                      fontWeight: '600'
+                    }}>
+                      Thane Flagship Location
+                    </span>
+                  </div>
+                </div>
+
+                <div className="divider" style={{ margin: '0 0 25px 0' }} />
+
+                {/* Details List */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
+                  {/* Address */}
+                  <div style={{ display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
+                    <MapPin style={{ color: 'var(--primary)', flexShrink: 0, marginTop: '3px' }} size={20} />
+                    <div>
+                      <h5 style={{ fontWeight: '700', fontSize: '0.9rem', color: '#FFF', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
+                        Address
+                      </h5>
+                      <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
+                        ST Depot, Akruti SMC Gate No. 1,<br />
+                        Opposite Royal Treat Wine and Dine,<br />
+                        near Khopat, Khopat,<br />
+                        Thane, Maharashtra 400601
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Phone */}
+                  <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                    <Phone style={{ color: 'var(--primary)', flexShrink: 0 }} size={20} />
+                    <div>
+                      <h5 style={{ fontWeight: '700', fontSize: '0.9rem', color: '#FFF', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px' }}>
+                        Phone Number
+                      </h5>
+                      <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>+91 22 4455 8899</p>
+                    </div>
+                  </div>
+
+                  {/* Email */}
+                  <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                    <Mail style={{ color: 'var(--primary)', flexShrink: 0 }} size={20} />
+                    <div>
+                      <h5 style={{ fontWeight: '700', fontSize: '0.9rem', color: '#FFF', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px' }}>
+                        Email Address
+                      </h5>
+                      <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>hello@babamisal.com</p>
+                    </div>
+                  </div>
+
+                  {/* Opening Hours */}
+                  <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                    <Clock style={{ color: 'var(--primary)', flexShrink: 0 }} size={20} />
+                    <div>
+                      <h5 style={{ fontWeight: '700', fontSize: '0.9rem', color: '#FFF', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px' }}>
+                        Opening Hours
+                      </h5>
+                      <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Daily: 08:30 AM - 10:30 PM (All Days)</p>
+                    </div>
+                  </div>
+
+                  {/* WhatsApp */}
+                  <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--primary)" style={{ flexShrink: 0 }}>
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.458 5.704 1.459h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                    </svg>
+                    <div>
+                      <h5 style={{ fontWeight: '700', fontSize: '0.9rem', color: '#FFF', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px' }}>
+                        WhatsApp Contact
+                      </h5>
+                      <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>+91 98765 43210</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* CTAs */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '40px' }}>
+                <a 
+                  href="https://www.google.com/maps/search/?api=1&query=ST+Depot,+Akruti+SMC+Gate+No.+1,+Opposite+Royal+Treat+Wine+and+Dine,+near+Khopat,+Khopat,+Thane,+Maharashtra+400601" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="btn btn-primary" 
+                  style={{ width: '100%', textTransform: 'uppercase', fontSize: '0.85rem' }}
+                >
+                  Open in Google Maps
+                </a>
+                <a 
+                  href="https://wa.me/919876543210" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="btn btn-secondary" 
+                  style={{ 
+                    width: '100%', 
+                    textTransform: 'uppercase', 
+                    fontSize: '0.85rem',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '10px',
+                    borderColor: '#25D366',
+                    color: '#25D366',
+                    background: 'rgba(37, 211, 102, 0.05)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(37, 211, 102, 0.15)';
+                    e.currentTarget.style.boxShadow = '0 0 15px rgba(37, 211, 102, 0.3)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(37, 211, 102, 0.05)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                >
+                  Chat on WhatsApp
+                </a>
+              </div>
+            </div>
+
+            {/* 2. Full Width Dark Google Maps Embed */}
+            <div className="map-wrapper" style={{
+              position: 'relative',
+              borderRadius: '20px',
+              border: '1px solid rgba(212, 175, 55, 0.3)',
+              overflow: 'hidden',
+              boxShadow: '0 15px 35px rgba(0,0,0,0.6)',
+              minHeight: '450px',
+              transition: 'var(--transition)'
+            }}>
+              {/* Google Maps Frame */}
+              <iframe
+                title="Baba Misal Location Map"
+                src="https://maps.google.com/maps?q=ST%20Depot,%20Akruti%20SMC%20Gate%20No.%201,%20Opposite%20Royal%20Treat%20Wine%20and%20Dine,%20near%20Khopat,%20Khopat,%20Thane,%20Maharashtra%20400601&t=&z=16&ie=UTF8&iwloc=&output=embed"
+                width="100%"
+                height="100%"
+                style={{
+                  border: 0,
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  filter: 'invert(90%) hue-rotate(180deg) grayscale(100%) contrast(90%)',
+                  opacity: 0.85
+                }}
+                allowFullScreen=""
+                loading="lazy"
+              />
+
+              {/* Floating location pin marker with custom pulse gold brand logo */}
+              <div style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -100%)',
+                zIndex: 10,
+                pointerEvents: 'none',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center'
+              }}>
+                {/* Logo wrapper */}
+                <div style={{
+                  width: '56px',
+                  height: '56px',
+                  borderRadius: '50%',
+                  border: '3px solid var(--primary)',
+                  background: '#000',
+                  padding: '2px',
+                  boxShadow: '0 0 20px var(--primary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  animation: 'pulseGold 2s infinite ease-in-out'
+                }}>
+                  <img 
+                    src="/favicon.ico" 
+                    alt="Map Pin Logo" 
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      borderRadius: '50%'
+                    }}
+                  />
+                </div>
+                {/* Pointer tip */}
+                <div style={{
+                  width: 0,
+                  height: 0,
+                  borderLeft: '10px solid transparent',
+                  borderRight: '10px solid transparent',
+                  borderTop: '15px solid var(--primary)',
+                  marginTop: '-2px',
+                  filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.5))'
+                }} />
+                {/* Pulse ring indicator underneath */}
+                <div style={{
+                  width: '20px',
+                  height: '8px',
+                  background: 'rgba(212, 175, 55, 0.4)',
+                  borderRadius: '50%',
+                  marginTop: '4px',
+                  animation: 'spinSlow 10s linear infinite',
+                  filter: 'blur(2px)'
+                }} />
+              </div>
+
+              {/* Quick overlay styling */}
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'linear-gradient(to bottom, rgba(7,7,7,0.4) 0%, transparent 15%, transparent 85%, rgba(7,7,7,0.7) 100%)',
+                pointerEvents: 'none',
+                zIndex: 2
+              }} />
+            </div>
+
+          </div>
+        </div>
+
+        {/* CSS Hover styling inside section */}
+        <style>{`
+          .map-wrapper:hover {
+            border-color: var(--primary) !important;
+            box-shadow: 0 20px 45px rgba(0,0,0,0.8), var(--gold-glow-strong) !important;
+          }
+          .map-wrapper:hover iframe {
+            opacity: 0.95 !important;
+          }
+          @media (max-width: 768px) {
+            .visit-grid {
+              grid-template-columns: 1fr !important;
+            }
+            .map-wrapper {
+              min-height: 350px !important;
+            }
+          }
+        `}</style>
       </section>
     </div>
   );

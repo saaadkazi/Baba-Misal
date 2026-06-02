@@ -2,7 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { 
   Lock, LayoutDashboard, Utensils, ReceiptText, LogOut, 
   TrendingUp, ShoppingBag, Plus, Edit2, Trash2, Search, 
-  Check, X, FileSpreadsheet, DollarSign, Calendar, RefreshCw 
+  Check, X, FileSpreadsheet, DollarSign, Calendar, RefreshCw,
+  History, Eye
 } from 'lucide-react';
 
 export default function Admin({ 
@@ -21,8 +22,117 @@ export default function Admin({
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loginError, setLoginError] = useState('');
 
-  // Active view: 'dashboard', 'menu', 'billing'
+  // Active view: 'dashboard', 'menu', 'billing', 'history'
   const [activeTab, setActiveTab] = useState('dashboard');
+
+  // Token History States
+  const [historySearch, setHistorySearch] = useState('');
+  const [historyDateFilter, setHistoryDateFilter] = useState('all');
+  const [historyStatusFilter, setHistoryStatusFilter] = useState('all');
+  const [viewingOrder, setViewingOrder] = useState(null);
+
+  // Date and Time Helper Functions for Token History pipeline
+  const isToday = (dateStr) => {
+    if (!dateStr) return false;
+    const d = new Date(dateStr);
+    const today = new Date();
+    return d.getDate() === today.getDate() &&
+           d.getMonth() === today.getMonth() &&
+           d.getFullYear() === today.getFullYear();
+  };
+
+  const isYesterday = (dateStr) => {
+    if (!dateStr) return false;
+    const d = new Date(dateStr);
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    return d.getDate() === yesterday.getDate() &&
+           d.getMonth() === yesterday.getMonth() &&
+           d.getFullYear() === yesterday.getFullYear();
+  };
+
+  const isThisWeek = (dateStr) => {
+    if (!dateStr) return false;
+    const d = new Date(dateStr);
+    const today = new Date();
+    const diffTime = Math.abs(today - d);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays <= 7;
+  };
+
+  const isThisMonth = (dateStr) => {
+    if (!dateStr) return false;
+    const d = new Date(dateStr);
+    const today = new Date();
+    return d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
+  };
+
+  const formatOrderDate = (dateStr) => {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleDateString('en-IN');
+  };
+
+  const formatOrderTime = (dateStr) => {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  // Memoized KPI calculations for Token History top dashboard
+  const historyStats = useMemo(() => {
+    let todayTokens = 0;
+    let pendingCount = 0;
+    let completedCount = 0;
+    let todayRev = 0;
+
+    orders.forEach(o => {
+      const orderIsToday = isToday(o.date);
+      if (orderIsToday) {
+        todayTokens += 1;
+        if (o.status !== 'Cancelled') {
+          todayRev += o.finalTotal;
+        }
+      }
+      if (o.status === 'Pending' || o.status === 'Preparing') {
+        pendingCount += 1;
+      }
+      if (o.status === 'Completed') {
+        completedCount += 1;
+      }
+    });
+
+    return { todayTokens, pendingCount, completedCount, todayRev };
+  }, [orders]);
+
+  // Memoized filter sorting pipeline for history list
+  const filteredOrders = useMemo(() => {
+    return orders.filter(o => {
+      // Search match (Token number, Customer Name, or Phone number)
+      const searchVal = historySearch.toLowerCase().trim();
+      const matchesSearch = searchVal === '' || 
+        o.token.toString().includes(searchVal) ||
+        o.customerName.toLowerCase().includes(searchVal) ||
+        o.customerPhone.includes(searchVal);
+
+      // Status match (Pending matches both Pending and Preparing)
+      let matchesStatus = true;
+      if (historyStatusFilter !== 'all') {
+        if (historyStatusFilter === 'Pending') {
+          matchesStatus = o.status === 'Pending' || o.status === 'Preparing';
+        } else {
+          matchesStatus = o.status === historyStatusFilter;
+        }
+      }
+
+      // Date window match
+      let matchesDate = true;
+      if (historyDateFilter === 'today') matchesDate = isToday(o.date);
+      else if (historyDateFilter === 'yesterday') matchesDate = isYesterday(o.date);
+      else if (historyDateFilter === 'week') matchesDate = isThisWeek(o.date);
+      else if (historyDateFilter === 'month') matchesDate = isThisMonth(o.date);
+
+      return matchesSearch && matchesStatus && matchesDate;
+    });
+  }, [orders, historySearch, historyStatusFilter, historyDateFilter]);
 
   // ================= ADMIN LOGIN SYSTEM =================
   const handleLogin = (e) => {
@@ -322,7 +432,8 @@ export default function Admin({
           {[
             { id: 'dashboard', label: 'Dashboard Control', icon: <LayoutDashboard size={18} /> },
             { id: 'menu', label: 'Menu Catalog Manager', icon: <Utensils size={18} /> },
-            { id: 'billing', label: 'Cashier POS Terminal', icon: <ReceiptText size={18} /> }
+            { id: 'billing', label: 'Cashier POS Terminal', icon: <ReceiptText size={18} /> },
+            { id: 'history', label: 'Token History', icon: <History size={18} /> }
           ].map(tab => (
             <button
               key={tab.id}
@@ -907,13 +1018,15 @@ export default function Admin({
                         key={dish.id} 
                         onClick={() => updateBillingCartQty(dish.id, 1)}
                         style={{
-                          background: '#151515',
+                          background: qty > 0 ? '#222222' : '#151515',
                           borderRadius: '8px',
                           padding: '10px',
-                          border: '1px solid rgba(255,255,255,0.03)',
+                          border: qty > 0 ? '1px solid var(--primary)' : '1px solid rgba(255,255,255,0.03)',
+                          boxShadow: qty > 0 ? '0 0 15px rgba(212, 175, 55, 0.22), 0 0 5px rgba(255, 107, 0, 0.12)' : 'none',
                           cursor: 'pointer',
                           position: 'relative',
-                          textAlign: 'center'
+                          textAlign: 'center',
+                          transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)'
                         }}
                       >
                         {qty > 0 && (
@@ -1045,6 +1158,376 @@ export default function Admin({
                 </form>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* ========================================================
+            VIEW D: TOKEN HISTORY SYSTEM
+            ======================================================== */}
+        {activeTab === 'history' && (
+          <div className="animate-fade-in">
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '35px' }}>
+              <div>
+                <h1 style={{ fontSize: '2.2rem', fontFamily: 'var(--font-heading)' }}>Token History Pipeline</h1>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>View, track, and manage all cash tokens and self QR table tickets</p>
+              </div>
+              
+              <button 
+                onClick={() => { setHistorySearch(''); setHistoryDateFilter('all'); setHistoryStatusFilter('all'); }} 
+                className="btn btn-secondary" 
+                style={{ padding: '8px 18px', fontSize: '0.75rem' }}
+              >
+                <RefreshCw size={14} /> Reset Filters
+              </button>
+            </div>
+
+            {/* KPI Metrics Dashboard Cards */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: '24px',
+              marginBottom: '40px'
+            }}>
+              {[
+                { label: "Today's Tokens", val: historyStats.todayTokens, desc: "Total orders booked today", color: "var(--secondary)", icon: <ShoppingBag /> },
+                { label: "Pending Orders", val: historyStats.pendingCount, desc: "Pending & Preparing kitchen queue", color: "var(--primary)", icon: <RefreshCw /> },
+                { label: "Completed Orders", val: historyStats.completedCount, desc: "Retrieved & served feasts", color: "#4caf50", icon: <Check /> },
+                { label: "Today's Revenue", val: `₹${historyStats.todayRev.toLocaleString()}`, desc: "Active sales generated today", color: "#4caf50", icon: <DollarSign /> }
+              ].map((kpi, idx) => (
+                <div key={idx} className="luxury-card" style={{ padding: '20px', borderLeft: `4px solid ${kpi.color}` }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                    <span style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', fontWeight: 'bold' }}>
+                      {kpi.label}
+                    </span>
+                    <div style={{ color: kpi.color }}>{kpi.icon}</div>
+                  </div>
+                  <h2 style={{ fontSize: '2rem', fontWeight: '800', margin: '5px 0' }}>{kpi.val}</h2>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-dark)' }}>{kpi.desc}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Filter controls and Search Grid */}
+            <div className="glass-panel" style={{
+              padding: '20px',
+              marginBottom: '30px',
+              border: '1px solid rgba(212,175,55,0.15)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '20px'
+            }}>
+              <div style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '20px',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}>
+                {/* Search Inputs */}
+                <div style={{ position: 'relative', width: '100%', maxWidth: '380px' }}>
+                  <Search size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#555' }} />
+                  <input
+                    type="text"
+                    placeholder="Search by Token, Name, or Mobile..."
+                    value={historySearch}
+                    onChange={(e) => setHistorySearch(e.target.value)}
+                    className="input-field"
+                    style={{ width: '100%', paddingLeft: '40px', height: '40px', fontSize: '0.85rem' }}
+                  />
+                </div>
+
+                {/* Dropdown selectors */}
+                <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+                  
+                  {/* Date Filter selector */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 'bold', textTransform: 'uppercase' }}>Time window:</span>
+                    <select
+                      value={historyDateFilter}
+                      onChange={(e) => setHistoryDateFilter(e.target.value)}
+                      className="input-field"
+                      style={{ height: '36px', padding: '0 12px', fontSize: '0.8rem', background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.1)' }}
+                    >
+                      <option value="all">All History</option>
+                      <option value="today">Today Only</option>
+                      <option value="yesterday">Yesterday</option>
+                      <option value="week">This Week (7 Days)</option>
+                      <option value="month">This Month</option>
+                    </select>
+                  </div>
+
+                  {/* Status Filter selector */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 'bold', textTransform: 'uppercase' }}>Status:</span>
+                    <select
+                      value={historyStatusFilter}
+                      onChange={(e) => setHistoryStatusFilter(e.target.value)}
+                      className="input-field"
+                      style={{ height: '36px', padding: '0 12px', fontSize: '0.8rem', background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.1)' }}
+                    >
+                      <option value="all">All Orders</option>
+                      <option value="Pending">Pending / Queue</option>
+                      <option value="Completed">Completed</option>
+                      <option value="Cancelled">Cancelled</option>
+                    </select>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+            {/* Token History Table */}
+            <div className="glass-panel" style={{ overflowX: 'auto', border: '1px solid rgba(212,175,55,0.1)' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.88rem' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.01)' }}>
+                    <th style={{ padding: '16px' }}>Token No</th>
+                    <th style={{ padding: '16px' }}>Customer</th>
+                    <th style={{ padding: '16px' }}>Mobile</th>
+                    <th style={{ padding: '16px' }}>Ordered Items</th>
+                    <th style={{ padding: '16px', textAlign: 'right' }}>Amount</th>
+                    <th style={{ padding: '16px' }}>Date</th>
+                    <th style={{ padding: '16px' }}>Time</th>
+                    <th style={{ padding: '16px', textAlign: 'center' }}>Status</th>
+                    <th style={{ padding: '16px', textAlign: 'center' }}>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredOrders.length > 0 ? (
+                    filteredOrders.map((order) => (
+                      <tr 
+                        key={order.id} 
+                        style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'var(--transition)' }} 
+                        className="table-row-hover"
+                      >
+                        <td style={{ padding: '16px', fontWeight: '800', color: 'var(--primary)' }}>
+                          #{order.token}
+                        </td>
+                        <td style={{ padding: '16px', fontWeight: 'bold' }}>{order.customerName}</td>
+                        <td style={{ padding: '16px', color: 'var(--text-muted)' }}>{order.customerPhone}</td>
+                        <td style={{ padding: '16px', color: 'var(--text-muted)', maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {order.items.map(i => `${i.name} (x${i.quantity})`).join(', ')}
+                        </td>
+                        <td style={{ padding: '16px', textAlign: 'right', fontWeight: 'bold', color: 'var(--primary)' }}>
+                          ₹{order.finalTotal}
+                        </td>
+                        <td style={{ padding: '16px', fontSize: '0.8rem' }}>{formatOrderDate(order.date)}</td>
+                        <td style={{ padding: '16px', fontSize: '0.8rem' }}>{formatOrderTime(order.date)}</td>
+                        <td style={{ padding: '16px', textAlign: 'center' }}>
+                          <span 
+                            style={{
+                              display: 'inline-block',
+                              padding: '4px 10px',
+                              borderRadius: '4px',
+                              fontSize: '0.75rem',
+                              fontWeight: 'bold',
+                              textTransform: 'uppercase',
+                              background: order.status === 'Completed' ? 'rgba(76, 175, 80, 0.15)' : 
+                                          order.status === 'Cancelled' ? 'rgba(244, 67, 54, 0.15)' : 'rgba(212, 175, 55, 0.15)',
+                              color: order.status === 'Completed' ? '#4caf50' : 
+                                     order.status === 'Cancelled' ? '#f44336' : 'var(--primary)',
+                              border: order.status === 'Completed' ? '1px solid #4caf50' : 
+                                      order.status === 'Cancelled' ? '1px solid #f44336' : '1px solid var(--primary)'
+                            }}
+                          >
+                            {order.status}
+                          </span>
+                        </td>
+                        <td style={{ padding: '16px', textAlign: 'center' }}>
+                          <button 
+                            onClick={() => setViewingOrder(order)}
+                            style={{
+                              color: 'var(--primary)',
+                              padding: '6px 12px',
+                              background: '#222',
+                              borderRadius: 'var(--radius-sm)',
+                              border: '1px solid rgba(255,255,255,0.05)',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              fontSize: '0.75rem',
+                              fontWeight: 'bold'
+                            }}
+                          >
+                            <Eye size={12} /> View
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="9" style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
+                        No token history matches found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Token Detail Modal Drawer */}
+            {viewingOrder && (
+              <div style={{
+                position: 'fixed',
+                inset: 0,
+                background: 'rgba(0,0,0,0.85)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 100,
+                padding: '20px',
+                backdropFilter: 'blur(4px)'
+              }}>
+                <div className="glass-panel animate-fade-in-up" style={{
+                  width: '100%',
+                  maxWidth: '650px',
+                  padding: '30px',
+                  border: '1px solid var(--primary)',
+                  boxShadow: 'var(--gold-glow-strong)'
+                }}>
+                  {/* Modal Header */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px dashed rgba(212,175,55,0.2)', paddingBottom: '15px', marginBottom: '20px' }}>
+                    <div>
+                      <span style={{ fontSize: '0.75rem', letterSpacing: '0.15em', color: 'var(--secondary)', fontWeight: 'bold' }}>TICKET DETAILS PANEL</span>
+                      <h3 style={{ fontSize: '1.6rem', fontFamily: 'var(--font-heading)', color: 'var(--primary)' }}>
+                        Token #{viewingOrder.token}
+                      </h3>
+                    </div>
+                    <button 
+                      onClick={() => setViewingOrder(null)} 
+                      style={{ color: 'var(--text-muted)', background: '#222', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+
+                  {/* Modal Grid content */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '25px', marginBottom: '25px' }}>
+                    {/* Left Col: Customer details */}
+                    <div>
+                      <h4 style={{ fontSize: '0.85rem', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>Guest Account</h4>
+                      <table style={{ width: '100%', fontSize: '0.85rem', borderCollapse: 'collapse' }}>
+                        <tbody>
+                          <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
+                            <td style={{ padding: '6px 0', color: 'var(--text-muted)' }}>Name</td>
+                            <td style={{ padding: '6px 0', fontWeight: 'bold', textAlign: 'right' }}>{viewingOrder.customerName}</td>
+                          </tr>
+                          <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
+                            <td style={{ padding: '6px 0', color: 'var(--text-muted)' }}>Mobile Phone</td>
+                            <td style={{ padding: '6px 0', fontWeight: 'bold', textAlign: 'right' }}>{viewingOrder.customerPhone}</td>
+                          </tr>
+                          <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
+                            <td style={{ padding: '6px 0', color: 'var(--text-muted)' }}>Order Source</td>
+                            <td style={{ padding: '6px 0', fontWeight: 'bold', textAlign: 'right', color: 'var(--secondary)' }}>{viewingOrder.source}</td>
+                          </tr>
+                          <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
+                            <td style={{ padding: '6px 0', color: 'var(--text-muted)' }}>Book Date</td>
+                            <td style={{ padding: '6px 0', fontWeight: 'bold', textAlign: 'right' }}>{formatOrderDate(viewingOrder.date)}</td>
+                          </tr>
+                          <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
+                            <td style={{ padding: '6px 0', color: 'var(--text-muted)' }}>Book Time</td>
+                            <td style={{ padding: '6px 0', fontWeight: 'bold', textAlign: 'right' }}>{formatOrderTime(viewingOrder.date)}</td>
+                          </tr>
+                          <tr>
+                            <td style={{ padding: '6px 0', color: 'var(--text-muted)' }}>Queue Status</td>
+                            <td style={{ padding: '6px 0', fontWeight: 'bold', textAlign: 'right' }}>
+                              <span style={{
+                                color: viewingOrder.status === 'Completed' ? '#4caf50' : 
+                                       viewingOrder.status === 'Cancelled' ? '#f44336' : 'var(--primary)'
+                              }}>
+                                {viewingOrder.status}
+                              </span>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Right Col: Items ledger */}
+                    <div>
+                      <h4 style={{ fontSize: '0.85rem', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>Order Ledger</h4>
+                      <div style={{ maxHeight: '180px', overflowY: 'auto', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '6px', padding: '10px', background: 'rgba(0,0,0,0.2)' }}>
+                        <table style={{ width: '100%', fontSize: '0.8rem', borderCollapse: 'collapse', textAlign: 'left' }}>
+                          <thead>
+                            <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-muted)' }}>
+                              <th style={{ paddingBottom: '6px' }}>Item</th>
+                              <th style={{ paddingBottom: '6px', textAlign: 'center' }}>Qty</th>
+                              <th style={{ paddingBottom: '6px', textAlign: 'right' }}>Subtotal</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {viewingOrder.items.map((item, idx) => (
+                              <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
+                                <td style={{ padding: '6px 0', fontWeight: 'bold' }}>{item.name}</td>
+                                <td style={{ padding: '6px 0', textAlign: 'center' }}>x{item.quantity}</td>
+                                <td style={{ padding: '6px 0', textAlign: 'right' }}>₹{item.subtotal}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Calculations summary */}
+                      <div style={{ marginTop: '15px', borderTop: '1px dashed rgba(255,255,255,0.1)', paddingTop: '10px', fontSize: '0.85rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                          <span style={{ color: 'var(--text-muted)' }}>Original Subtotal</span>
+                          <span>₹{viewingOrder.total}</span>
+                        </div>
+                        {viewingOrder.discount > 0 && (
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', color: 'var(--secondary)' }}>
+                            <span>Applied Discount</span>
+                            <span>- ₹{viewingOrder.discount}</span>
+                          </div>
+                        )}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '6px', color: 'var(--primary)' }}>
+                          <span>Net Invoiced Total</span>
+                          <span>₹{viewingOrder.finalTotal}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions buttons */}
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '30px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '20px' }}>
+                    <button 
+                      onClick={() => {
+                        onUpdateOrderStatus(viewingOrder.id, 'Completed');
+                        setViewingOrder(prev => ({ ...prev, status: 'Completed' }));
+                      }}
+                      className="btn btn-primary" 
+                      style={{ 
+                        flexGrow: 1, 
+                        background: 'linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)', 
+                        color: '#FFFFFF',
+                        border: 'none',
+                        boxShadow: '0 4px 15px rgba(76,175,80,0.2)' 
+                      }}
+                    >
+                      <Check size={14} /> Mark Completed
+                    </button>
+                    <button 
+                      onClick={() => {
+                        onUpdateOrderStatus(viewingOrder.id, 'Cancelled');
+                        setViewingOrder(prev => ({ ...prev, status: 'Cancelled' }));
+                      }}
+                      className="btn btn-danger" 
+                      style={{ flexGrow: 1 }}
+                    >
+                      <X size={14} /> Mark Cancelled
+                    </button>
+                    <button 
+                      onClick={() => setViewingOrder(null)} 
+                      className="btn btn-secondary" 
+                      style={{ flexGrow: 1 }}
+                    >
+                      Close Window
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
           </div>
         )}
       </div>
