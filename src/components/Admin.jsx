@@ -230,6 +230,7 @@ export default function Admin({
   };
 
   // ================= BILLING (POS) SYSTEM STATES =================
+  const [posMobileTab, setPosMobileTab] = useState('catalog'); // 'catalog' or 'invoice'
   const [billingCart, setBillingCart] = useState({});
   const [billingDiscount, setBillingDiscount] = useState('');
   const [billingCustomerName, setBillingCustomerName] = useState('Walk-In Guest');
@@ -891,7 +892,7 @@ export default function Admin({
             </div>
 
             {/* Menu Items CRUD Table */}
-            <div className="glass-panel" style={{ overflowX: 'auto', border: '1px solid rgba(212,175,55,0.1)' }}>
+            <div className="glass-panel desktop-only-table" style={{ overflowX: 'auto', border: '1px solid rgba(212,175,55,0.1)' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.01)' }}>
@@ -941,6 +942,43 @@ export default function Admin({
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Menu Items CRUD Mobile Card Grid */}
+            <div className="mobile-only-cards-grid" style={{ display: 'none', flexDirection: 'column', gap: '15px' }}>
+              {filteredDishes.map((dish) => (
+                <div key={dish.id} className="luxury-card" style={{ display: 'flex', gap: '15px', padding: '16px', alignItems: 'center' }}>
+                  <img 
+                    src={dish.image} 
+                    alt={dish.name} 
+                    style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }} 
+                  />
+                  <div style={{ flexGrow: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                      <h4 style={{ fontSize: '1rem', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{dish.name}</h4>
+                      <span style={{ fontSize: '1rem', color: 'var(--primary)', fontWeight: 'bold', marginLeft: '10px' }}>₹{dish.price}</span>
+                    </div>
+                    <span className="badge badge-gold" style={{ fontSize: '0.65rem', padding: '3px 8px', marginBottom: '8px', display: 'inline-block' }}>{dish.category}</span>
+                    <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: '1.4', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                      {dish.description}
+                    </p>
+                    <div style={{ display: 'flex', gap: '10px', marginTop: '12px', justifyContent: 'flex-end' }}>
+                      <button 
+                        onClick={() => openEditForm(dish)} 
+                        style={{ color: 'var(--primary)', padding: '6px 12px', background: '#222', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.05)', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                      >
+                        <Edit2 size={12} /> Edit
+                      </button>
+                      <button 
+                        onClick={() => confirmDeleteDish(dish.id)} 
+                        style={{ color: '#f44336', padding: '6px 12px', background: '#222', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.05)', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                      >
+                        <Trash2 size={12} /> Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
 
             {/* Dynamic Add / Edit Modal Overlay */}
@@ -1115,6 +1153,67 @@ export default function Admin({
               </div>
             )}
 
+            {/* POS Mobile view sub-tabs switcher */}
+            <div className="pos-mobile-toggle-strip glass-panel" style={{
+              display: 'none',
+              padding: '6px',
+              borderRadius: 'var(--radius-md)',
+              marginBottom: '20px',
+              border: '1px solid rgba(212,175,55,0.15)',
+              gap: '6px'
+            }}>
+              <button
+                type="button"
+                onClick={() => setPosMobileTab('catalog')}
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  borderRadius: '6px',
+                  fontSize: '0.85rem',
+                  fontWeight: 'bold',
+                  textAlign: 'center',
+                  background: posMobileTab === 'catalog' ? 'var(--primary)' : 'transparent',
+                  color: posMobileTab === 'catalog' ? '#000' : 'var(--text-muted)',
+                  transition: 'var(--transition)'
+                }}
+              >
+                1. Select Items
+              </button>
+              <button
+                type="button"
+                onClick={() => setPosMobileTab('invoice')}
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  borderRadius: '6px',
+                  fontSize: '0.85rem',
+                  fontWeight: 'bold',
+                  textAlign: 'center',
+                  background: posMobileTab === 'invoice' ? 'var(--primary)' : 'transparent',
+                  color: posMobileTab === 'invoice' ? '#000' : 'var(--text-muted)',
+                  transition: 'var(--transition)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px'
+                }}
+              >
+                2. Invoice Receipt 
+                {activeBillingItems.reduce((acc, curr) => acc + curr.quantity, 0) > 0 && (
+                  <span style={{
+                    background: posMobileTab === 'invoice' ? '#000' : 'var(--secondary)',
+                    color: '#fff',
+                    padding: '2px 8px',
+                    borderRadius: 'var(--radius-full)',
+                    fontSize: '0.75rem',
+                    fontWeight: 'bold'
+                  }}>
+                    {activeBillingItems.reduce((acc, curr) => acc + curr.quantity, 0)}
+                  </span>
+                )}
+              </button>
+            </div>
+
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))',
@@ -1123,7 +1222,7 @@ export default function Admin({
             }}>
               
               {/* POS LEFT COLUMN: Quick Search Dish Catalog */}
-              <div className="glass-panel" style={{ padding: '20px', border: '1px solid rgba(212,175,55,0.15)' }}>
+              <div className={`glass-panel pos-catalog-column ${posMobileTab === 'catalog' ? 'mobile-active' : 'mobile-inactive'}`} style={{ padding: '20px', border: '1px solid rgba(212,175,55,0.15)' }}>
                 <h3 style={{ fontSize: '1.15rem', fontFamily: 'var(--font-heading)', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '10px', marginBottom: '15px' }}>
                   POS Catalog Catalog Selector
                 </h3>
@@ -1222,7 +1321,7 @@ export default function Admin({
               </div>
 
               {/* POS RIGHT COLUMN: Bill Calculations Table */}
-              <div className="glass-panel" style={{ padding: '24px', border: '1px solid rgba(212,175,55,0.15)' }}>
+              <div className={`glass-panel pos-invoice-column ${posMobileTab === 'invoice' ? 'mobile-active' : 'mobile-inactive'}`} style={{ padding: '24px', border: '1px solid rgba(212,175,55,0.15)' }}>
                 <h3 style={{ fontSize: '1.2rem', fontFamily: 'var(--font-heading)', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '10px', marginBottom: '15px' }}>
                   Invoice Ledger Calculator
                 </h3>
@@ -1443,7 +1542,7 @@ export default function Admin({
             </div>
 
             {/* Token History Table */}
-            <div className="glass-panel" style={{ overflowX: 'auto', border: '1px solid rgba(212,175,55,0.1)' }}>
+            <div className="glass-panel desktop-only-table" style={{ overflowX: 'auto', border: '1px solid rgba(212,175,55,0.1)' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.88rem' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.01)' }}>
@@ -1529,6 +1628,96 @@ export default function Admin({
                   )}
                 </tbody>
               </table>
+            </div>
+
+            {/* Token History Mobile Card List */}
+            <div className="mobile-only-cards-grid" style={{ display: 'none', flexDirection: 'column', gap: '15px' }}>
+              {filteredOrders.length > 0 ? (
+                filteredOrders.map((order) => (
+                  <div 
+                    key={order.id} 
+                    className="luxury-card" 
+                    style={{ 
+                      padding: '16px', 
+                      border: '1px solid rgba(212,175,55,0.12)', 
+                      background: 'rgba(15,15,15,0.95)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '12px'
+                    }}
+                  >
+                    {/* Header */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px dashed rgba(255,255,255,0.05)', paddingBottom: '10px' }}>
+                      <div>
+                        <span style={{ fontSize: '1.05rem', fontWeight: '800', color: 'var(--primary)' }}>Token #{order.token}</span>
+                        <span style={{ fontSize: '0.7rem', background: '#222', padding: '2px 8px', borderRadius: '4px', color: '#888', marginLeft: '8px' }}>{order.source}</span>
+                      </div>
+                      <span 
+                        style={{
+                          padding: '3px 8px',
+                          borderRadius: '4px',
+                          fontSize: '0.75rem',
+                          fontWeight: 'bold',
+                          textTransform: 'uppercase',
+                          background: order.status === 'Completed' ? 'rgba(76, 175, 80, 0.12)' : 
+                                      order.status === 'Cancelled' ? 'rgba(244, 67, 54, 0.12)' : 'rgba(212, 175, 55, 0.12)',
+                          color: order.status === 'Completed' ? '#4caf50' : 
+                                 order.status === 'Cancelled' ? '#f44336' : 'var(--primary)',
+                          border: order.status === 'Completed' ? '1px solid #4caf50' : 
+                                  order.status === 'Cancelled' ? '1px solid #f44336' : '1px solid var(--primary)'
+                        }}
+                      >
+                        {order.status}
+                      </span>
+                    </div>
+
+                    {/* Customer & DateTime */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '0.8rem' }}>
+                      <div>
+                        <p style={{ color: 'var(--text-dark)', textTransform: 'uppercase', fontSize: '0.65rem', fontWeight: 'bold', letterSpacing: '0.05em' }}>Guest</p>
+                        <p style={{ fontWeight: 'bold', color: '#fff', marginTop: '2px' }}>{order.customerName}</p>
+                      </div>
+                      <div>
+                        <p style={{ color: 'var(--text-dark)', textTransform: 'uppercase', fontSize: '0.65rem', fontWeight: 'bold', letterSpacing: '0.05em' }}>Mobile</p>
+                        <p style={{ color: 'var(--text-muted)', marginTop: '2px' }}>{order.customerPhone}</p>
+                      </div>
+                      <div>
+                        <p style={{ color: 'var(--text-dark)', textTransform: 'uppercase', fontSize: '0.65rem', fontWeight: 'bold', letterSpacing: '0.05em' }}>Date</p>
+                        <p style={{ color: 'var(--text-muted)', marginTop: '2px' }}>{formatOrderDate(order.date)}</p>
+                      </div>
+                      <div>
+                        <p style={{ color: 'var(--text-dark)', textTransform: 'uppercase', fontSize: '0.65rem', fontWeight: 'bold', letterSpacing: '0.05em' }}>Time</p>
+                        <p style={{ color: 'var(--text-muted)', marginTop: '2px' }}>{formatOrderTime(order.date)}</p>
+                      </div>
+                    </div>
+
+                    {/* Order Summary & Pricing */}
+                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.03)', fontSize: '0.8rem' }}>
+                      <p style={{ color: 'var(--text-dark)', textTransform: 'uppercase', fontSize: '0.65rem', fontWeight: 'bold', letterSpacing: '0.05em', marginBottom: '4px' }}>Items Summary</p>
+                      <p style={{ color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                        {order.items.map(i => `${i.name} (x${i.quantity})`).join(', ')}
+                      </p>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: '8px', paddingTop: '8px' }}>
+                        <span style={{ fontWeight: 'bold' }}>Total Invoiced</span>
+                        <span style={{ fontWeight: 'bold', color: 'var(--primary)', fontSize: '0.9rem' }}>₹{order.finalTotal}</span>
+                      </div>
+                    </div>
+
+                    {/* View Action */}
+                    <button 
+                      onClick={() => setViewingOrder(order)}
+                      className="btn btn-secondary"
+                      style={{ width: '100%', padding: '8px', fontSize: '0.78rem', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                    >
+                      <Eye size={14} /> View Full Receipt
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div style={{ textAlign: 'center', padding: '40px 20px', border: '1px dashed rgba(255,255,255,0.05)', borderRadius: 'var(--radius-md)' }}>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>No token history matches found.</p>
+                </div>
+              )}
             </div>
 
             {/* Token Detail Modal Drawer */}

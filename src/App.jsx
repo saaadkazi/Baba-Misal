@@ -544,6 +544,29 @@ export default function App() {
           .admin-badge-btn {
             padding: 6px !important;
           }
+
+          /* Admin responsive layout toggles */
+          .desktop-only-table {
+            display: none !important;
+          }
+          .mobile-only-cards-grid {
+            display: flex !important;
+          }
+          .pos-mobile-toggle-strip {
+            display: flex !important;
+          }
+          .pos-catalog-column.mobile-inactive {
+            display: none !important;
+          }
+          .pos-catalog-column.mobile-active {
+            display: block !important;
+          }
+          .pos-invoice-column.mobile-inactive {
+            display: none !important;
+          }
+          .pos-invoice-column.mobile-active {
+            display: block !important;
+          }
         }
         
         .nav-link-hover:hover, .footer-link:hover {
